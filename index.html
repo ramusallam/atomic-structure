@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quantized Energy, the Bohr Model & Isotopes</title>
+<title>Atomic Structure & Relative Abundance</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Roboto+Mono:wght@400;700&family=Roboto+Serif:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -374,8 +374,8 @@
 <body>
 <header>
   <div class="titles">
-    <div class="eyebrow">Chemistry · Atomic Structure</div>
-    <h1>Quantized Energy, the Bohr Model &amp; Isotopes</h1>
+    <div class="eyebrow">Chemistry · Atoms, Isotopes &amp; Atomic Mass</div>
+    <h1>Atomic Structure &amp; Relative Abundance</h1>
   </div>
   <div class="step-indicator" id="stepIndicator">01 / 10</div>
 </header>
@@ -535,15 +535,18 @@ class ElectronCloud {
     const f = dt * 0.06;
     for (let i = 0; i < 4; i++) {
       const dir = (i % 2) ? -1 : 1;
+      // Pull from the nucleus weakens outward (distance + shielding by inner shells),
+      // so inner electrons are held tight and wander little; outer ones roam more.
+      const buzz = 0.8 + i * 1.15;
       for (const p of this.shells[i]) {
-        // random walk on angular velocity -> sporadic, not clockwork
-        p.av += (Math.random()-0.5) * 0.012;
+        // random walk on angular velocity -> sporadic, not clockwork (outer shells drift more)
+        p.av += (Math.random()-0.5) * (0.010 + i*0.006);
         p.av = Math.max(-0.07, Math.min(0.07, p.av)) * 0.94;
         p.ang += p.av + dir * 0.0009 * f;
         p.rPhase += 0.004 * p.rSpeed * f;
-        // bee-buzz jitter
-        p.jx = (p.jx + (Math.random()-0.5)*1.8) * 0.8;
-        p.jy = (p.jy + (Math.random()-0.5)*1.8) * 0.8;
+        // bee-buzz jitter — amplitude grows with shell number (less nuclear pull)
+        p.jx = (p.jx + (Math.random()-0.5)*buzz) * 0.82;
+        p.jy = (p.jy + (Math.random()-0.5)*buzz) * 0.82;
       }
     }
   }
@@ -577,8 +580,9 @@ class ElectronCloud {
       const isVal = opts.valence && i === occ;
       const core = isVal ? '#a855f7' : '#6366f1';
       const glow = isVal ? '168,85,247' : '129,140,248';
+      const rAmp = 6 + i * 5; // outer shells breathe wider in/out — looser hold
       for (const p of this.shells[i]) {
-        const rr = r + Math.sin(p.rPhase) * 10;
+        const rr = r + Math.sin(p.rPhase) * rAmp;
         const ex = this.cx + Math.cos(p.ang)*rr + p.jx;
         const ey = this.cy + Math.sin(p.ang)*rr + p.jy;
         p.trail.unshift({x:ex, y:ey}); if (p.trail.length > 6) p.trail.pop();
@@ -653,8 +657,8 @@ scenes.push({
   step: 'Step 2: The Bohr Model & Electron Shells',
   seeLabel: 'Bohr model builder',
   heading: 'Step 2: Electron Shells',
-  notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. They buzz around like a cloud, but you can still tell which level they are in. Capacities: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds.",
-  notebook: "Build <strong>Lithium</strong> and <strong>Calcium</strong>. Draw both diagrams. Label each shell's count, then circle the <strong>valence electrons</strong> (outer shell) and write how many there are.",
+  notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. Shells fill from the inside out: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds. Watch the motion: <strong>inner electrons are held tight and barely wander</strong>, while <strong>outer electrons roam wider</strong>, a clue that the nucleus pulls on them less.",
+  notebook: "Build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2). Draw both, label each shell's count, and circle the <strong>valence electrons</strong>. Then answer the <strong>Hypothesize</strong> prompt in the tool: why do the outer electrons feel less pull from the nucleus than the inner ones?",
   build(stage) {
     const atoms = [3,6,8,11,12,17,19,20];
     let z = 3;
@@ -684,25 +688,42 @@ scenes.push({
       valEl.innerHTML = occ < 0 ? '&nbsp;'
         : `Valence electrons: <span class="readout">${placed[occ]}</span> &nbsp;(outer shell, energy level ${occ+1})`;
     }
+    // how many shells THIS element occupies (so we never draw a phantom empty shell)
+    const nShells = () => shellsFor(z).length;
+    // shells fill inside-out: the next shell to fill is the first one not yet at capacity
+    const fillShell = () => { for (let i=0;i<nShells();i++){ if ((placed[i]||0) < caps[i]) return i; } return -1; };
     c.addEventListener('click', (ev) => {
       const p = canvasPos(c, ev);
       const d = Math.hypot(p.x - CX, p.y - CY);
-      let shell = -1, best = 26;
-      RADII.forEach((r,i) => { if (Math.abs(d-r) < best) { best = Math.abs(d-r); shell = i; } });
-      if (shell < 0) return;
-      if ((placed[shell]||0) < caps[shell] && totalPlaced() < z) { placed[shell] = (placed[shell]||0)+1; render(); }
+      const ns = nShells();
+      let shell = -1, best = 30;
+      for (let i=0;i<ns;i++){ if (Math.abs(d-RADII[i]) < best) { best = Math.abs(d-RADII[i]); shell = i; } }
+      const fs = fillShell();
+      if (shell < 0 || fs < 0 || totalPlaced() >= z) return;
+      if (shell !== fs) return; // must fill inner shells before outer ones
+      placed[shell] = (placed[shell]||0)+1; render();
     });
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
       const mass = Math.round(ELEMENTS[z].m);
+      const ns = nShells();
+      const fs = fillShell();
+      // always-visible shell guides so students aim at a real target, not the abyss
+      for (let i=0;i<ns;i++){
+        const active = (i === fs);
+        ctx.strokeStyle = active ? 'rgba(168,85,247,0.6)' : 'rgba(99,102,241,0.28)';
+        ctx.setLineDash([3,7]); ctx.lineWidth = active ? 1.9 : 1.2;
+        ctx.beginPath(); ctx.arc(CX, CY, RADII[i], 0, Math.PI*2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
       drawNucleus(ctx, CX, CY, z, mass - z);
       cloud.setCounts(placed);
       cloud.update(dt);
       cloud.draw(ctx, { valence: true });
-      // ghost capacity counts above each ring
+      // capacity counts above each shell this element actually uses
       ctx.font = '700 11px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      for (let i=0;i<RADII.length;i++){
-        ctx.fillStyle = 'rgba(124,111,90,0.6)';
+      for (let i=0;i<ns;i++){
+        ctx.fillStyle = (i === fs) ? 'rgba(168,85,247,0.9)' : 'rgba(124,111,90,0.6)';
         ctx.fillText(`${placed[i]||0}/${caps[i]}`, CX, CY - RADII[i] - 9);
       }
       // valence-shell label
@@ -713,7 +734,9 @@ scenes.push({
         ctx.fillText('← valence shell', CX + RADII[occ] + 8, CY);
       }
     };
-    stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Electrons buzz like a probability cloud. The outer shell (purple) holds the valence electrons.'));
+    const inquiry = el('div', { class:'caption', style:'margin-top:10px;padding:12px 14px;border:1px solid rgba(168,85,247,0.35);border-radius:12px;background:rgba(168,85,247,0.06);text-align:left;line-height:1.5' });
+    inquiry.innerHTML = '<strong style="color:var(--accentPurple)">Hypothesize:</strong> The outer electrons buzz <strong>wider</strong> than the tightly-held inner ones, they feel <strong>less pull</strong> from the nucleus. Why? Write your best idea before you move on. <em>(Hint: count how many electrons sit between the outer electron and the nucleus.)</em>';
+    stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Click the glowing shell to drop in an electron. Inner shells fill first; the outer shell (purple) holds the valence electrons.'), inquiry);
     render();
   }
 });
