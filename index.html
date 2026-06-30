@@ -268,6 +268,15 @@
     border-radius: 999px;
   }
 
+  /* difficulty pills on practice questions */
+  .diff-pill {
+    display: inline-block; font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+    margin: 0 6px; vertical-align: middle;
+  }
+  .diff-simple { color: #166534; background: rgba(16,185,129,0.14); }
+  .diff-challenge { color: #9a3412; background: rgba(245,158,11,0.16); }
+
   /* element lookup */
   .lookup {
     display: flex; flex-direction: column; align-items: center; gap: 18px;
@@ -377,7 +386,7 @@
     <div class="eyebrow">Chemistry</div>
     <h1>Atomic Structure</h1>
   </div>
-  <div class="step-indicator" id="stepIndicator">01 / 11</div>
+  <div class="step-indicator" id="stepIndicator">01 / 12</div>
 </header>
 <div class="progress-track"><div class="bar"><div class="fill" id="progressFill"></div></div></div>
 
@@ -1209,39 +1218,96 @@ scenes.push({
   }
 });
 
-// ---- Step 11: Summary & Check for Understanding ----
+// ---- Practice: 10 questions, alternating simple / challenge ----
 scenes.push({
-  step: 'Step 11: Summary & Check for Understanding',
-  seeLabel: 'Summary',
-  heading: 'Step 11: Pull It Together',
-  notes: "<strong>Module 1:</strong> The Bohr model explains light through quantized electron jumps. <strong>Module 2:</strong> The periodic table shows average masses because elements are mixtures of isotopes.",
-  notebook: "Answer each question first, then reveal the solution and check your work. Fix anything you missed.",
+  step: 'Practice Questions',
+  seeLabel: 'Practice questions',
+  heading: 'Practice Questions',
+  notes: "Ten questions that pull the whole simulation together. They alternate <strong>simple</strong> and <strong>challenge</strong>, and the last two are <strong>worked relative-abundance</strong> problems, one solving for the average mass and one solving for the percentages. Answer each in your notebook first, then reveal the worked solution and copy it down.",
+  notebook: "Number your page <strong>1 to 10</strong>. Answer each question <strong>before</strong> you reveal it, then copy the solution underneath and fix anything you missed.",
   build(stage) {
-    const summaries = [
-      { tag:'Module 1 Summary', text:'Electrons jump between fixed energy levels. The photons they emit give each element its own spectrum and flame color.' },
-      { tag:'Module 2 Summary', text:'The periodic table lists average masses because every element is a mixture of isotopes, weighted by how common each one is.' }
-    ];
-    summaries.forEach(s => stage.append(el('div',{class:'summary-card'},[el('div',{class:'sc-tag'},s.tag), el('p',{},s.text)])));
     const qs = [
-      { q:'An electron moves from n = 4 to n = 2. Is energy absorbed or emitted?', a:'<strong>Emitted.</strong> It moves to a lower energy level, so it releases a photon.' },
-      { q:'Find the Aᵣ of an element that is 75% mass 35 and 25% mass 37.', a:'(35 × 0.75) + (37 × 0.25) = 26.25 + 9.25 = <strong>35.5</strong>.' },
-      { q:'Describe the Bohr model for ²⁴Mg²⁺.', a:'12 protons, 12 neutrons, but only <strong>10 electrons</strong> (it lost 2 to become 2+), so the configuration is <strong>2, 8</strong>.' }
+      { d:'Simple', q:'An atom has 11 protons. What element is it, and how many protons does every sodium atom have?',
+        a:"<strong>Sodium (Na).</strong> The number of protons (the atomic number) is the element's identity, so 11 protons is always sodium. Every sodium atom has exactly <strong>11 protons</strong>." },
+      { d:'Challenge', q:'Two ions are heated. One glows red (long wavelength), one glows violet (short wavelength). Whose electrons made the bigger energy drop? Explain.',
+        a:'The <strong>violet</strong> one. Shorter wavelength means higher energy, and higher-energy light comes from a <strong>bigger fall</strong> between energy levels. The red glow came from a smaller energy drop.' },
+      { d:'Simple', q:'Write the electron arrangement (shells) for sodium, which has 11 electrons.',
+        a:"<strong>2, 8, 1.</strong> Shells fill from the inside out: 2 in the first, 8 in the second, 1 left over in the third. That single outer electron is sodium's valence electron." },
+      { d:'Challenge', q:'Why does a heated atom emit only certain specific colors instead of a smooth rainbow?',
+        a:"Because the energy levels are <strong>fixed (quantized)</strong>. An electron can only make certain jumps, and each jump releases one specific energy, which is one specific wavelength and color. The result is a set of sharp lines, the element's <strong>fingerprint</strong>, not a continuous rainbow." },
+      { d:'Simple', q:'An atom has 17 protons and 18 neutrons. What is its mass number?',
+        a:'Mass number = protons + neutrons = 17 + 18 = <strong>35</strong>.' },
+      { d:'Challenge', q:'Carbon-12 and Carbon-14 are isotopes. What is the same, what is different, and which atom is heavier? Why?',
+        a:'Same number of <strong>protons</strong> (6) and electrons, so both are carbon. Different number of <strong>neutrons</strong> (6 vs 8). <strong>Carbon-14 is heavier</strong> because mass number = protons + neutrons, and it has two more neutrons.' },
+      { d:'Simple', q:'How many electrons are in ²³Na⁺?',
+        a:'Sodium has 11 protons. A 1+ charge means it <strong>lost one electron</strong>, so 11 − 1 = <strong>10 electrons</strong>.' },
+      { d:'Challenge', q:'Find the protons, neutrons, and electrons in ¹⁶O²⁻.',
+        a:'<strong>8 protons</strong> (oxygen). Neutrons = 16 − 8 = <strong>8</strong>. The 2− charge means it <strong>gained 2 electrons</strong>, so 8 + 2 = <strong>10 electrons</strong>.' },
+      { d:'Simple', q:'Worked — relative average. Chlorine is 75% mass-35 and 25% mass-37. Find its relative atomic mass (Aᵣ).',
+        a:'Multiply each mass by its decimal abundance, then add:<br>(35 × 0.75) + (37 × 0.25)<br>= 26.25 + 9.25<br>= <strong>Aᵣ = 35.5</strong>.' },
+      { d:'Challenge', q:'Worked — solving for percentages. Boron has isotopes B-10 and B-11 and a relative atomic mass of 10.8. Find the percentage of each isotope.',
+        a:'Let x = fraction of B-10, so (1 − x) = fraction of B-11.<br>10x + 11(1 − x) = 10.8<br>10x + 11 − 11x = 10.8<br>−x = −0.2 &nbsp;→&nbsp; x = 0.2<br>So <strong>20% B-10 and 80% B-11</strong>.' }
     ];
     let done = 0;
     const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
     const text = el('div',{class:'pb-text'}, `0 of ${qs.length} checked`);
     qs.forEach((item,i) => {
-      const btn = el('button',{class:'reveal-btn'},'Click for solution');
+      const pill = el('span',{class:'diff-pill '+(item.d==='Simple'?'diff-simple':'diff-challenge')}, item.d);
+      const btn = el('button',{class:'reveal-btn'},'Show solution');
       const rev = el('div',{class:'reveal-content',hidden:'',html:item.a});
-      btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown'; btn.disabled=true;
+      btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown — copy it down'; btn.disabled=true;
         done++; bar.querySelector('.pb-fill').style.width=(done/qs.length*100)+'%';
         text.textContent = done===qs.length?`✓ All ${qs.length} checked`:`${done} of ${qs.length} checked`;
         text.classList.toggle('complete', done===qs.length); });
-      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},'Q'+(i+1)), item.q]), btn, rev ]));
+      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},(i+1)+'.'), pill, item.q]), btn, rev ]));
     });
     stage.append(el('div',{class:'pb-progress'},[bar,text]));
   }
 });
+
+// ---- Step 12: Your Questions (launch the next lesson) ----
+scenes.push({
+  step: 'Step 12: Your Questions',
+  seeLabel: 'Your questions',
+  heading: 'Step 12: What Are You Wondering?',
+  notes: "You have seen how protons and neutrons sit in the nucleus, how electrons fill shells, and how jumping electrons make the colors you saw in the flame test. Now turn it around. <strong>What are you still wondering?</strong> The best questions are the ones the simulation could not fully answer.",
+  notebook: "List <strong>at least 5 questions</strong> you still have about atoms, electrons, or light. There are no wrong questions. We will use these as the launch points for our next lesson, so make them real.",
+  build(stage) {
+    stage.append(el('div',{class:'summary-card',style:'border-left-color:var(--accentBlue)'},[
+      el('div',{class:'sc-tag',style:'color:var(--accentBlue)'},'Launch the next lesson'),
+      el('p',{},'Write at least five real questions the simulation raised for you. Type them here, then copy them into your notebook. These become where we start next class.')
+    ]));
+    const inputs = [];
+    const wrap = el('div',{style:'display:flex;flex-direction:column;gap:8px;margin-top:4px'});
+    for (let i=0;i<5;i++){
+      const inp = el('input',{type:'text',placeholder:'I wonder...',style:'flex:1;font-family:var(--font-sans);font-size:14px;padding:9px 12px;border:1px solid var(--borderColor);border-radius:9px;background:#fff;color:var(--textPrimary)'});
+      inputs.push(inp);
+      wrap.append(el('div',{style:'display:flex;align-items:center;gap:10px'},[ el('div',{class:'q-num',style:'min-width:20px'}, (i+1)+'.'), inp ]));
+    }
+    stage.append(wrap);
+    const copyBtn = el('button',{class:'primary',style:'margin-top:2px'},'Copy my questions');
+    const msg = el('div',{class:'pb-text'});
+    copyBtn.addEventListener('click', async () => {
+      const lines = inputs.map(inp=>inp.value.trim()).filter(Boolean).map((v,i)=>`${i+1}. ${v}`);
+      if (!lines.length){ msg.textContent='Type at least one question first.'; msg.classList.remove('complete'); return; }
+      try { await navigator.clipboard.writeText('My questions from the Atomic Structure simulation:\n'+lines.join('\n'));
+        msg.textContent = `✓ Copied ${lines.length} question${lines.length>1?'s':''} — paste them into your notebook.`; msg.classList.add('complete'); }
+      catch(e){ msg.textContent='Copy blocked — select the text and copy it by hand.'; msg.classList.remove('complete'); }
+    });
+    stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[copyBtn, msg]));
+  }
+});
+
+// =====================================================
+//  Reorder into the streamlined teaching flow:
+//  1 segue from lab · 2 Bohr model + flame analysis · 3 atomic number/mass
+//  · 4 isotope formulas · 5 relative abundance · practice · your questions
+// =====================================================
+;(function(){
+  const flow = [0, 2, 3, 4, 5, 1, 6, 7, 8, 9, 10, 11];
+  const ordered = flow.map(i => scenes[i]).filter(Boolean);
+  if (ordered.length === scenes.length) { scenes.length = 0; scenes.push(...ordered); }
+})();
 
 // =====================================================
 //  Nav controller
@@ -1265,7 +1331,7 @@ function setScene(i) {
   const s = scenes[i];
   stageEl.innerHTML = '';
   stageLabel.textContent = s.seeLabel || 'What you see';
-  stepHeadingEl.textContent = s.heading;
+  stepHeadingEl.textContent = 'Step ' + (i+1) + ': ' + s.heading.replace(/^Step \d+:\s*/, '');
   notesEl.innerHTML = s.notes;
   notebookTextEl.innerHTML = s.notebook;
   stepIndicator.textContent = `${pad2(i+1)} / ${pad2(scenes.length)}`;
