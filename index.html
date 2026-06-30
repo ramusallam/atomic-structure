@@ -627,7 +627,7 @@ scenes.push({
   seeLabel: 'Flame test → atom',
   heading: 'Step 1: What Happened in the Lab',
   notes: "You just ran the <strong>flame test lab</strong>, where every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong> circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> bumps an outer electron up, then it <strong>falls back</strong> and releases that energy as light, a <strong>photon</strong>. How far it falls sets the color, so each element emits its own <strong>signature color</strong>.",
-  notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch the outer electron get excited and release its light, and record the color. Then, <strong>before you read the notes</strong>, predict in one sentence why each metal ion makes a different color, and check it against the notes.",
+  notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch one outer electron absorb the heat, jump up a level, then fall back down and release light, and record the color. Then, <strong>before you read the notes</strong>, predict in one sentence why each metal ion makes a different color, and check it against the notes.",
   build(stage) {
     const ions = {
       Li:{z:3, col:'#dc2626', name:'crimson red', wl:671},
@@ -643,6 +643,7 @@ scenes.push({
     const { c, ctx } = makeCanvas(stage, 520, 312);
     const ease = x => x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2;
     const cloud = new ElectronCloud(CX, CY);
+    const S = 0.72;   // scale the atom so the excited level fits above the outer shell
     let phase = 'rest', t = 0, burn = 0, excite = 0, photon = null;
     function drawFlame(bx,by,col,bright,time){
       ctx.fillStyle='#44403c'; roundRect(ctx,bx-20,by,40,26,4); ctx.fill();
@@ -672,14 +673,45 @@ scenes.push({
     currentTick = (dt) => {
       const f=ions[active], time=performance.now();
       ctx.clearRect(0,0,c.width,c.height);
-      drawFlame(FLX,FLY,f.col,Math.max(0.15,burn),time);
+      const occ = shellsFor(f.z).length-1, outerR = RADII[occ], excR = outerR + 46;
+
+      // excite -> hold -> heat removed -> fall -> emit
+      if(phase==='rising'){ t=Math.min(1,t+dt/650); excite=ease(t); status.textContent='Heat on — an outer electron absorbs energy and jumps up a level.'; if(t>=1){phase='excited';t=0;} }
+      else if(phase==='excited'){ t=Math.min(1,t+dt/600); excite=1; status.textContent='Excited and unstable — the heat is holding it up here.'; if(t>=1){phase='falling';t=0;} }
+      else if(phase==='falling'){ t=Math.min(1,t+dt/650); excite=1-ease(t); status.textContent='Heat removed — it falls back down and releases light.'; if(t>=1){ phase='rest'; t=0; burn=1; photon={t:0, sx:CX, sy:CY-outerR*S}; } }
+
+      // flame: hot/orange while heating, signature color on emission, small idle otherwise
+      let fcol, fbright;
+      if(phase==='rising'||phase==='excited'){ fcol='#fb923c'; fbright=0.85; }
+      else if(burn>0){ fcol=f.col; fbright=burn; }
+      else { fcol=f.col; fbright=0.16; }
+      drawFlame(FLX,FLY,fcol,fbright,time);
+
+      // ----- atom group, scaled so the excited level sits cleanly above the outer shell -----
+      ctx.save(); ctx.translate(CX,CY); ctx.scale(S,S); ctx.translate(-CX,-CY);
+      // the higher "excited" energy level
+      ctx.strokeStyle=`rgba(245,158,11,${0.16+0.55*excite})`; ctx.setLineDash([4,8]); ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.arc(CX,CY,excR,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      if(excite>0.05){ ctx.fillStyle=`rgba(180,83,9,${0.45+0.55*excite})`; ctx.font='700 13px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('excited level', CX, CY-excR-7); }
       drawNucleus(ctx,CX,CY,f.z, f.n ?? (Math.round(ELEMENTS[f.z].m)-f.z));
-      cloud.setCounts(shellsFor(f.z)); cloud.update(dt); cloud.draw(ctx,{valence:true});
-      const occ = shellsFor(f.z).length-1, outerR = RADII[occ];
-      if(phase==='rising'){ t=Math.min(1,t+dt/600); excite=ease(t); status.textContent='Heat flowing in — the outer electron gains energy.'; if(t>=1){phase='excited';t=0;} }
-      else if(phase==='excited'){ t=Math.min(1,t+dt/450); excite=1; status.innerHTML='Outer electron <strong>excited</strong> and unstable.'; if(t>=1){phase='falling';t=0; photon={t:0, sx:CX+outerR*0.7, sy:CY-outerR*0.7};} }
-      else if(phase==='falling'){ t=Math.min(1,t+dt/400); excite=Math.max(0,1-t); status.textContent='Electron falls back — releasing light.'; }
-      if(excite>0){ ctx.save(); ctx.strokeStyle=`rgba(245,158,11,${0.55*excite})`; ctx.lineWidth=3; ctx.shadowColor='rgba(245,158,11,0.85)'; ctx.shadowBlur=16*excite; ctx.beginPath(); ctx.arc(CX,CY,outerR,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
+      // during the cycle, lift one valence electron out of the cloud so it can be the hot one
+      const counts = shellsFor(f.z).slice();
+      const animating = phase!=='rest';
+      if(animating && counts[occ]>0) counts[occ]-=1;
+      cloud.setCounts(counts); cloud.update(dt); cloud.draw(ctx,{valence:true});
+      if(animating){
+        const rHot = outerR + (excR-outerR)*excite;
+        const hx = CX + Math.sin(time/110)*4, hy = CY - rHot;   // rides up the top, keeps a little buzz
+        ctx.strokeStyle='rgba(168,85,247,0.45)'; ctx.lineWidth=2; ctx.setLineDash([3,5]);
+        ctx.beginPath(); ctx.moveTo(CX, CY-outerR); ctx.lineTo(CX, CY-excR); ctx.stroke(); ctx.setLineDash([]);
+        const g=ctx.createRadialGradient(hx,hy,0,hx,hy,16); g.addColorStop(0,'rgba(168,85,247,0.75)'); g.addColorStop(1,'rgba(168,85,247,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(hx,hy,16,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#a855f7'; ctx.beginPath(); ctx.arc(hx,hy,7,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.font='700 9px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('-',hx,hy);
+      }
+      ctx.restore();
+
+      // emitted photon travels to the flame
       if(photon){
         photon.t=Math.min(1,photon.t+dt/700);
         const tx=FLX, ty=212;
@@ -688,11 +720,11 @@ scenes.push({
         ctx.save(); ctx.shadowColor=pcol; ctx.shadowBlur=12; ctx.strokeStyle=pcol; ctx.lineWidth=3; ctx.beginPath();
         for(let k=0;k<11;k++){ const wob=Math.sin(k*0.9+time/70)*5; const xx=px-Math.cos(ang)*k*6+Math.cos(ang+Math.PI/2)*wob, yy=py-Math.sin(ang)*k*6+Math.sin(ang+Math.PI/2)*wob; k===0?ctx.moveTo(xx,yy):ctx.lineTo(xx,yy); }
         ctx.stroke(); ctx.restore();
-        if(photon.t>=1){ photon=null; burn=1; phase='rest';
+        if(photon.t>=1){ photon=null;
           status.innerHTML = `Light out — the flame glows <strong style="color:${f.col}">${f.name}</strong>, ${ELEMENTS[f.z].n}'s signature color.`; }
       }
-      if(burn>0) burn=Math.max(0,burn-dt/1200);
-      heatBtn.disabled = phase!=='rest';
+      if(burn>0) burn=Math.max(0,burn-dt/1300);
+      heatBtn.disabled = phase!=='rest' || !!photon;
     };
     stage.append(chips, el('div',{class:'tool-row',style:'margin-top:2px'},[heatBtn]), status,
       el('div',{class:'caption'},"Match your unknown's flame color to one of these to identify it."));
@@ -840,8 +872,9 @@ scenes.push({
     const { c, ctx } = makeCanvas(stage, 520, 340);
     const NMAX = 5;
     const E = n => -1/(n*n);
-    const ytop = 40, ybot = 296;
-    const yOf = n => ybot - (E(n)-E(1))/(E(NMAX)-E(1))*(ybot-ytop);
+    // hand-tuned unequal spacing: big gap low down, gaps shrink upward but never crowd
+    const LY = { 1:296, 2:186, 3:116, 4:72, 5:42 };
+    const yOf = n => LY[n];
     let level = 1;
     let anim = null;     // {from,to,t,dir,wl}
     let photon = null;
