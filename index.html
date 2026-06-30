@@ -626,17 +626,17 @@ scenes.push({
   step: 'Step 1: From the Flame Test Lab',
   seeLabel: 'Flame test → atom',
   heading: 'Step 1: What Happened in the Lab',
-  notes: "You just ran the <strong>flame test lab</strong>: every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong>, circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> feeds an outer electron energy, so it <strong>jumps</strong> to a higher level (<strong>excitation</strong>). It can't stay up there, so it <strong>falls back</strong> and releases that energy as a particle of light, a <strong>photon</strong>. How far it falls sets the <strong>color</strong>. Every element holds its electrons at different levels, so every element emits its own <strong>signature color</strong>.",
-  notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch the outer electron jump, fall, and release light. Record the color, then answer the lab's question in one sentence: <strong>why does each metal ion produce a different color?</strong>",
+  notes: "You just ran the <strong>flame test lab</strong>, where every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong> circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> bumps an outer electron up, then it <strong>falls back</strong> and releases that energy as light, a <strong>photon</strong>. How far it falls sets the color, so each element emits its own <strong>signature color</strong>.",
+  notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch the outer electron get excited and release its light, and record the color. Then, <strong>before you read the notes</strong>, predict in one sentence why each metal ion makes a different color, and check it against the notes.",
   build(stage) {
     const ions = {
       Li:{z:3, col:'#dc2626', name:'crimson red', wl:671},
       Na:{z:11, col:'#f59e0b', name:'yellow-orange', wl:589},
       K:{z:19, col:'#a855f7', name:'lilac', wl:404},
       Ca:{z:20, col:'#f97316', name:'orange-red', wl:622},
-      Cu:{z:29, col:'#10b981', name:'blue-green', wl:515},
+      Cu:{z:29, col:'#10b981', name:'blue-green', wl:515, n:34},
       Sr:{z:38, col:'#ef4444', name:'scarlet red', wl:650},
-      Ba:{z:56, col:'#84cc16', name:'apple green', wl:524}
+      Ba:{z:56, col:'#84cc16', name:'apple green', wl:524, n:82}
     };
     let active = 'Na';
     const CX = 190, CY = 156, FLX = 452, FLY = 286;
@@ -673,7 +673,7 @@ scenes.push({
       const f=ions[active], time=performance.now();
       ctx.clearRect(0,0,c.width,c.height);
       drawFlame(FLX,FLY,f.col,Math.max(0.15,burn),time);
-      drawNucleus(ctx,CX,CY,f.z,Math.round(ELEMENTS[f.z].m)-f.z);
+      drawNucleus(ctx,CX,CY,f.z, f.n ?? (Math.round(ELEMENTS[f.z].m)-f.z));
       cloud.setCounts(shellsFor(f.z)); cloud.update(dt); cloud.draw(ctx,{valence:true});
       const occ = shellsFor(f.z).length-1, outerR = RADII[occ];
       if(phase==='rising'){ t=Math.min(1,t+dt/600); excite=ease(t); status.textContent='Heat flowing in — the outer electron gains energy.'; if(t>=1){phase='excited';t=0;} }
@@ -745,7 +745,7 @@ scenes.push({
   step: 'Step 3: The Bohr Model & Electron Shells',
   seeLabel: 'Bohr model builder',
   heading: 'Step 3: Electron Shells',
-  notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. Shells fill from the inside out: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds. Watch the motion: <strong>inner electrons are held tight and barely wander</strong>, while <strong>outer electrons roam wider</strong>, a clue that the nucleus pulls on them less.",
+  notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. Shells fill from the inside out: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds.",
   notebook: "Build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2). Draw both, label each shell's count, and circle the <strong>valence electrons</strong>. Then answer the <strong>Hypothesize</strong> prompt in the tool: why do the outer electrons feel less pull from the nucleus than the inner ones?",
   build(stage) {
     const atoms = [3,6,8,11,12,17,19,20];
@@ -812,7 +812,7 @@ scenes.push({
       ctx.font = '700 11px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
       for (let i=0;i<ns;i++){
         ctx.fillStyle = (i === fs) ? 'rgba(168,85,247,0.9)' : 'rgba(124,111,90,0.6)';
-        ctx.fillText(`${placed[i]||0}/${caps[i]}`, CX, CY - RADII[i] - 9);
+        ctx.fillText(`${placed[i]||0}/${caps[i]}`, CX, Math.max(10, CY - RADII[i] - 9));
       }
       // valence-shell label
       const occ = outerOcc();
@@ -983,7 +983,7 @@ scenes.push({
   step: 'Step 6: Flame Tests',
   seeLabel: 'Flame test bench',
   heading: 'Step 6: Flame Tests',
-  notes: "In a flame test, heat <strong>excites electrons</strong>. As they fall back, each element emits photons of its own <strong>signature color</strong>. That is why every element burns a different color, and it is the same physics as the emission spectrum.",
+  notes: "Same physics as the emission spectrum, now across many elements: when heated, each element's electrons emit photons of its own <strong>signature color</strong>. That color is what identifies an <strong>unknown</strong> ion in the lab.",
   notebook: "Test 3 elements. Write each element and its flame color. Explain in one sentence why <strong>copper</strong> and <strong>sodium</strong> look different.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 360);
@@ -1129,7 +1129,7 @@ scenes.push({
   seeLabel: 'Aᵣ calculator',
   heading: 'Step 9: Relative Atomic Mass',
   notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, add the results, then divide by the total abundance (usually 1.00 or 100).",
-  notebook: "Run copper in the tool. Copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.6</strong>.",
+  notebook: "Run copper in the tool. Copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.",
   build(stage) {
     const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any'}); return el('div',{class:'field'},[el('label',{},lab),i]); };
     const m1=mk('Isotope 1 mass',63), a1=mk('Abundance 1 (%)',69.2), m2=mk('Isotope 2 mass',65), a2=mk('Abundance 2 (%)',30.8);
@@ -1176,7 +1176,7 @@ scenes.push({
     const list = el('div',{class:'calc-grid'});
     const status = el('div',{class:'pb-text'});
     const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
-    function renderStatus(){ const f=list.querySelector?list:null; status.textContent = shown<stepsData.length? `${shown} of ${stepsData.length} steps revealed` : `✓ All ${stepsData.length} steps revealed`;
+    function renderStatus(){ status.textContent = shown<stepsData.length? `${shown} of ${stepsData.length} steps revealed` : `✓ All ${stepsData.length} steps revealed`;
       status.classList.toggle('complete', shown>=stepsData.length); bar.querySelector('.pb-fill').style.width = (shown/stepsData.length*100)+'%'; }
     function addStep(){ if(shown>=stepsData.length) return; const s=stepsData[shown];
       const card = el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},(shown+1)+'.'), s.t]),
