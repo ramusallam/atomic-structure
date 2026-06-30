@@ -49,7 +49,7 @@
     -webkit-font-smoothing: antialiased;
   }
   header {
-    padding: 16px 32px 10px;
+    padding: 12px 32px 8px;
     max-width: 1340px;
     margin: 0 auto;
     display: flex;
@@ -103,7 +103,7 @@
   main {
     max-width: 1340px;
     margin: 0 auto;
-    padding: 18px 32px 28px;
+    padding: 12px 32px 20px;
   }
   .workspace {
     display: grid;
@@ -118,8 +118,8 @@
     border-top: 4px solid var(--accentBlue);
     border-radius: 16px;
     box-shadow: var(--shadow-md);
-    padding: 20px;
-    min-height: 560px;
+    padding: 16px 18px;
+    min-height: 440px;
     display: flex;
     flex-direction: column;
     animation: fadeUp 0.4s ease-out;
@@ -133,7 +133,7 @@
     color: var(--accentBlue);
     margin-bottom: 12px;
   }
-  .stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+  .stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
   canvas { display: block; width: 100%; height: auto; border-radius: 12px; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -377,7 +377,7 @@
     <div class="eyebrow">Chemistry</div>
     <h1>Atomic Structure</h1>
   </div>
-  <div class="step-indicator" id="stepIndicator">01 / 10</div>
+  <div class="step-indicator" id="stepIndicator">01 / 11</div>
 </header>
 <div class="progress-track"><div class="bar"><div class="fill" id="progressFill"></div></div></div>
 
@@ -612,11 +612,120 @@ function sub(s){ return `<span style="font-size:0.72em;vertical-align:-0.3em">${
 // =====================================================
 const scenes = [];
 
-// ---- Step 1: Identity & nuclear symbol ----
+// ---- Step 1: Bridge from the Flame Test Lab ----
 scenes.push({
-  step: 'Step 1: The Nucleus and Identity',
+  step: 'Step 1: From the Flame Test Lab',
+  seeLabel: 'Flame test → atom',
+  heading: 'Step 1: What Happened in the Lab',
+  notes: "You just ran the <strong>flame test lab</strong>: every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong>, circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> feeds an outer electron energy, so it <strong>jumps</strong> to a higher level (<strong>excitation</strong>). It can't stay up there, so it <strong>falls back</strong> and releases that energy as a particle of light, a <strong>photon</strong>. How far it falls sets the <strong>color</strong>. Every element holds its electrons at different levels, so every element emits its own <strong>signature color</strong>.",
+  notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch the outer electron jump, fall, and release light. Record the color, then answer the lab's question in one sentence: <strong>why does each metal ion produce a different color?</strong>",
+  build(stage) {
+    const ions = {
+      Li:{z:3, col:'#dc2626', name:'crimson red', wl:671, val:1},
+      Na:{z:11, col:'#f59e0b', name:'yellow-orange', wl:589, val:1},
+      K:{z:19, col:'#a855f7', name:'lilac', wl:404, val:1},
+      Ca:{z:20, col:'#f97316', name:'orange-red', wl:622, val:2},
+      Cu:{z:29, col:'#10b981', name:'blue-green', wl:515, val:1},
+      Sr:{z:38, col:'#ef4444', name:'scarlet red', wl:650, val:2},
+      Ba:{z:56, col:'#84cc16', name:'apple green', wl:524, val:2}
+    };
+    let active = 'Na';
+    const CX = 198, CY = 165;
+    const R_IN = 56, R_OUT = 108, R_EXC = 150;
+    const HOT_ANG = -Math.PI/2;
+    const { c, ctx } = makeCanvas(stage, 500, 330);
+    const ease = x => x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2;
+    let phase = 'rest';     // rest | rising | excited | falling
+    let t = 0, burn = 0, photons = [];
+    let narr = 'Press <strong>Heat the flame</strong> to excite the outer electron.';
+    function drawElectron(x,y,hot){
+      const glow = hot?'168,85,247':'129,140,248', core = hot?'#a855f7':'#6366f1';
+      const g=ctx.createRadialGradient(x,y,0,x,y,13);
+      g.addColorStop(0,`rgba(${glow},0.6)`); g.addColorStop(1,`rgba(${glow},0)`);
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,13,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=core; ctx.beginPath(); ctx.arc(x,y,hot?6.5:5.2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='700 8px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('-',x,y);
+    }
+    function drawFlame(bx,by,col,bright,time){
+      ctx.fillStyle='#44403c'; roundRect(ctx,bx-20,by,40,26,4); ctx.fill();
+      ctx.fillStyle='#292524'; roundRect(ctx,bx-8,by-26,16,28,3); ctx.fill();
+      const baseY=by-22, peak=46+bright*92;
+      for(let layer=0;layer<3;layer++){
+        const w=30-layer*8, h=peak-layer*22, flick=Math.sin(time/120+layer)*4;
+        const grad=ctx.createLinearGradient(bx,baseY,bx,baseY-h);
+        grad.addColorStop(0, layer===0?'rgba(99,102,241,0.5)':col);
+        grad.addColorStop(0.5,col); grad.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.globalAlpha=(layer===2?0.95:0.6)*(0.3+bright*0.7); ctx.fillStyle=grad;
+        ctx.beginPath(); ctx.moveTo(bx-w/2,baseY);
+        ctx.quadraticCurveTo(bx-w/2+flick,baseY-h*0.6,bx+flick,baseY-h);
+        ctx.quadraticCurveTo(bx+w/2-flick,baseY-h*0.6,bx+w/2,baseY);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }
+    const readout = el('div',{class:'spectrum-readout'});
+    const phaseEl = el('div',{class:'spectrum-readout', style:'font-weight:700;color:var(--accentPurple);min-height:18px'});
+    const chips = el('div',{class:'tool-row'}, Object.keys(ions).map(k => el('button',{
+      class:'chip'+(k===active?' active':''), 'data-k':k,
+      onclick(){ active=k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',ch.dataset.k===k)); phase='rest'; t=0; burn=0; photons=[]; narr='Press <strong>Heat the flame</strong> to excite the outer electron.'; render(); }
+    }, k)));
+    const heatBtn = el('button',{class:'primary'},'Heat the flame ↑');
+    heatBtn.addEventListener('click',()=>{ if(phase==='rest'){ phase='rising'; t=0; } });
+    function render(){
+      const f=ions[active];
+      readout.innerHTML = `<strong style="color:${f.col}">${ELEMENTS[f.z].n}</strong> burns <strong>${f.name}</strong> — light near <strong>${f.wl} nm</strong>.`;
+    }
+    currentTick = (dt) => {
+      const f=ions[active], time=performance.now();
+      ctx.clearRect(0,0,c.width,c.height);
+      drawFlame(420,300,f.col,Math.max(0.16,burn),time);
+      for(const r of [R_IN,R_OUT]){ ctx.strokeStyle='rgba(99,102,241,0.30)'; ctx.setLineDash([3,7]); ctx.lineWidth=1.3;
+        ctx.beginPath(); ctx.arc(CX,CY,r,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.strokeStyle='rgba(245,158,11,0.32)'; ctx.setLineDash([2,8]); ctx.lineWidth=1.1;
+      ctx.beginPath(); ctx.arc(CX,CY,R_EXC,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      drawNucleus(ctx,CX,CY,f.z,Math.round(ELEMENTS[f.z].m)-f.z);
+      const spin=time/2600;
+      drawElectron(CX+Math.cos(spin)*R_IN, CY+Math.sin(spin)*R_IN);
+      drawElectron(CX+Math.cos(spin+Math.PI)*R_IN, CY+Math.sin(spin+Math.PI)*R_IN);
+      const baseAng=spin*0.6;
+      for(let i=1;i<f.val;i++){ const a=baseAng+i*(Math.PI*2/f.val); drawElectron(CX+Math.cos(a)*R_OUT, CY+Math.sin(a)*R_OUT); }
+      let rHot=R_OUT;
+      if(phase==='rising'){ t=Math.min(1,t+dt/600); rHot=R_OUT+(R_EXC-R_OUT)*ease(t); narr='Heat absorbed — the electron <strong>jumps</strong> to a higher level.'; if(t>=1){phase='excited';t=0;} }
+      else if(phase==='excited'){ t+=dt/650; rHot=R_EXC; narr="Excited and unstable — it can't stay up here."; if(t>=1){phase='falling';t=0;} }
+      else if(phase==='falling'){ t=Math.min(1,t+dt/550); rHot=R_EXC+(R_OUT-R_EXC)*ease(t); narr='Falling back down...';
+        if(t>=1){ phase='rest'; t=0; burn=1;
+          photons.push({x:CX+Math.cos(HOT_ANG)*R_OUT, y:CY+Math.sin(HOT_ANG)*R_OUT, life:1});
+          narr=`Photon released — the flame glows <strong style="color:${f.col}">${f.name}</strong>.`;
+        } }
+      const hx=CX+Math.cos(HOT_ANG)*rHot, hy=CY+Math.sin(HOT_ANG)*rHot;
+      drawElectron(hx,hy,true);
+      if(burn>0) burn=Math.max(0,burn-dt/1100);
+      const pcol=wavelengthToRGB(Math.max(405,Math.min(680,f.wl)));
+      photons=photons.filter(p=>p.life>0);
+      for(const p of photons){ p.y-=dt*0.22; p.life-=dt/1100;
+        ctx.globalAlpha=p.life; ctx.strokeStyle=pcol; ctx.lineWidth=2.4; ctx.shadowColor=pcol; ctx.shadowBlur=10;
+        ctx.beginPath(); for(let k=0;k<6;k++){ const px=p.x+Math.sin(time/90+k)*5, py=p.y+k*8; k===0?ctx.moveTo(px,py):ctx.lineTo(px,py); } ctx.stroke();
+        ctx.shadowBlur=0; ctx.globalAlpha=1; }
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(124,111,90,0.95)'; ctx.font='600 11px Inter';
+      ctx.fillText('nucleus = protons + neutrons', CX, CY+40);
+      ctx.fillStyle='rgba(168,85,247,0.95)'; ctx.font='700 10px Roboto Mono'; ctx.textAlign='left';
+      ctx.fillText('outer electron', CX+R_OUT+6, CY);
+      phaseEl.innerHTML = narr;
+      heatBtn.disabled = phase!=='rest';
+    };
+    stage.append(chips, el('div',{class:'tool-row',style:'margin-top:2px'},[heatBtn]), readout, phaseEl,
+      el('div',{class:'caption'},'Heat excites an outer electron; the light it emits as it falls is the flame color you saw. Match your unknown to one of these colors to identify it.'));
+    render();
+  }
+});
+
+// ---- Step 2: Identity & nuclear symbol ----
+scenes.push({
+  step: 'Step 2: The Nucleus and Identity',
   seeLabel: 'Element identity tool',
-  heading: 'Step 1: Atomic Number = Identity',
+  heading: 'Step 2: Atomic Number = Identity',
   notes: "The <strong>atomic number</strong> is the number of <strong>protons</strong>. It is the element's fingerprint: any atom with 6 protons must be carbon. The <strong>mass number</strong> is the number of <strong>protons plus neutrons</strong> in the nucleus.",
   notebook: "Use the tool. Pick <strong>3 atomic numbers</strong>, write each element's name and its nuclear symbol. Circle the protons.",
   build(stage) {
@@ -652,11 +761,11 @@ scenes.push({
   }
 });
 
-// ---- Step 2: Bohr model & shells ----
+// ---- Step 3: Bohr model & shells ----
 scenes.push({
-  step: 'Step 2: The Bohr Model & Electron Shells',
+  step: 'Step 3: The Bohr Model & Electron Shells',
   seeLabel: 'Bohr model builder',
-  heading: 'Step 2: Electron Shells',
+  heading: 'Step 3: Electron Shells',
   notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. Shells fill from the inside out: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds. Watch the motion: <strong>inner electrons are held tight and barely wander</strong>, while <strong>outer electrons roam wider</strong>, a clue that the nucleus pulls on them less.",
   notebook: "Build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2). Draw both, label each shell's count, and circle the <strong>valence electrons</strong>. Then answer the <strong>Hypothesize</strong> prompt in the tool: why do the outer electrons feel less pull from the nucleus than the inner ones?",
   build(stage) {
@@ -664,8 +773,8 @@ scenes.push({
     let z = 3;
     let placed = [0,0,0,0];
     const caps = [2,8,8,2];
-    const CX = 260, CY = 185;
-    const { c, ctx } = makeCanvas(stage, 520, 370);
+    const CX = 260, CY = 166;
+    const { c, ctx } = makeCanvas(stage, 520, 326);
     const cloud = new ElectronCloud(CX, CY);
     const status = el('div', { class:'spectrum-readout' });
     const valEl = el('div', { class:'spectrum-readout', style:'font-weight:700;color:var(--accentPurple)' });
@@ -734,96 +843,108 @@ scenes.push({
         ctx.fillText('← valence shell', CX + RADII[occ] + 8, CY);
       }
     };
-    const inquiry = el('div', { class:'caption', style:'margin-top:10px;padding:12px 14px;border:1px solid rgba(168,85,247,0.35);border-radius:12px;background:rgba(168,85,247,0.06);text-align:left;line-height:1.5' });
+    const inquiry = el('div', { class:'caption', style:'margin-top:6px;padding:9px 12px;font-size:11.5px;border:1px solid rgba(168,85,247,0.35);border-radius:10px;background:rgba(168,85,247,0.06);text-align:left;line-height:1.45' });
     inquiry.innerHTML = '<strong style="color:var(--accentPurple)">Hypothesize:</strong> The outer electrons buzz <strong>wider</strong> than the tightly-held inner ones, they feel <strong>less pull</strong> from the nucleus. Why? Write your best idea before you move on. <em>(Hint: count how many electrons sit between the outer electron and the nucleus.)</em>';
     stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Click the glowing shell to drop in an electron. Inner shells fill first; the outer shell (purple) holds the valence electrons.'), inquiry);
     render();
   }
 });
 
-// ---- Step 3: Quantized energy levels (ladder) ----
+// ---- Step 4: Quantized energy levels (ladder) ----
 scenes.push({
-  step: 'Step 3: Quantized Energy Levels',
+  step: 'Step 4: Quantized Energy Levels',
   seeLabel: 'Energy ladder',
-  heading: 'Step 3: Energy Comes in Steps',
-  notes: "Electrons sit in <strong>fixed energy levels</strong> and are never found between them, like rungs on a ladder. Absorbing a <strong>photon</strong> makes an electron jump up (<strong>excitation</strong>). Falling back down releases a photon of a specific color (<strong>emission</strong>).",
-  notebook: "Draw the energy ladder. Show one arrow up labeled <strong>absorb / excite</strong> and one arrow down labeled <strong>emit / release light</strong>.",
+  heading: 'Step 4: Energy Comes in Steps',
+  notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder. Now watch them fall. The rungs are <strong>fixed energy levels</strong>, and they <strong>crowd together near the top</strong>, so the gaps are <strong>not equal</strong>. A <strong>bigger fall</strong> means <strong>more energy</strong>, which means <strong>shorter-wavelength, bluer</strong> light. A small fall gives <strong>red</strong>. The electron can drop one rung or tumble <strong>all the way to the ground state</strong> at once, and every drop has its own color.",
+  notebook: "Climb up with <strong>Absorb</strong>, then <strong>Emit</strong>. Record two drops: one <strong>big</strong> (toward blue/violet) and one <strong>small</strong> (toward red). Write the wavelength for each, then answer: which fall released the higher-energy light?",
   build(stage) {
-    const { c, ctx } = makeCanvas(stage, 520, 380);
-    let level = 1;        // current n (1..4)
-    let anim = null;      // {from,to,t,photonDir}
-    let photon = null;    // emitted photon traveling out
-    const levelY = n => 330 - (n-1) * 78 - (n>1 ? (n-1)*6 : 0);
-    function jump(to) {
-      if (anim) return;
-      const dir = to > level ? 'absorb' : 'emit';
-      anim = { from: level, to, t: 0, dir };
-    }
-    const up = el('button', { class:'primary' }, 'Absorb photon (jump up) ↑');
-    const down = el('button', {}, 'Emit photon (fall down) ↓');
-    up.addEventListener('click', () => { if (level < 4) jump(level+1); });
-    down.addEventListener('click', () => { if (level > 1) jump(level-1); });
-    const status = el('div', { class:'spectrum-readout' }, 'Electron is in energy level n = 1 (ground state).');
+    const { c, ctx } = makeCanvas(stage, 520, 340);
+    const NMAX = 5;
+    const E = n => -1/(n*n);
+    const ytop = 40, ybot = 296;
+    const yOf = n => ybot - (E(n)-E(1))/(E(NMAX)-E(1))*(ybot-ytop);
+    let level = 1;
+    let anim = null;     // {from,to,t,dir,wl}
+    let photon = null;
+    const EX = 262;
+    // emission color: bigger drop = more energy = shorter (bluer) wavelength
+    const dropWL = (hi, lo) => {
+      const dE = (1/(lo*lo)) - (1/(hi*hi));
+      const norm = Math.max(0, Math.min(1, (dE - 0.02)/(0.96 - 0.02)));
+      return Math.round(680 - norm*270); // 410 violet .. 680 red
+    };
+    const colorName = wl => wl<430?'violet':wl<480?'blue':wl<510?'blue-green':wl<565?'green':wl<590?'yellow':wl<625?'orange':'red';
+    const up = el('button', { class:'primary' }, 'Absorb (jump up) ↑');
+    const down = el('button', {}, 'Emit (fall down) ↓');
+    function start(to, dir){ if(anim) return; anim = { from: level, to, t:0, dir, wl: dir==='emit'?dropWL(level,to):null }; }
+    up.addEventListener('click', () => { if(level<NMAX && !anim) start(level+1,'absorb'); });
+    down.addEventListener('click', () => { if(level>1 && !anim){ const to = 1 + Math.floor(Math.random()*(level-1)); start(to,'emit'); } });
+    const status = el('div', { class:'spectrum-readout' }, 'Electron in n = 1 (ground state). Absorb a photon to climb the ladder.');
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
-      // rungs
-      for (let n=1;n<=4;n++){
-        const y = levelY(n);
-        ctx.strokeStyle = 'rgba(99,102,241,0.35)'; ctx.lineWidth = 2;
+      // rungs (unequal spacing — crowd near the top)
+      for (let n=1;n<=NMAX;n++){
+        const y = yOf(n);
+        ctx.strokeStyle = 'rgba(99,102,241,0.40)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(120,y); ctx.lineTo(430,y); ctx.stroke();
         ctx.fillStyle = '#7C6F5A'; ctx.font='600 13px Inter, sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
-        ctx.fillText('n = '+n, 110, y);
-        if (n===1){ ctx.fillStyle='#A0937B'; ctx.font='italic 11px Inter'; ctx.textAlign='left'; ctx.fillText('ground state', 360, y+16); }
+        ctx.fillText('n = '+n, 112, y);
+        if (n===1){ ctx.fillStyle='#A0937B'; ctx.font='italic 11px Inter'; ctx.textAlign='left'; ctx.fillText('ground state', 150, y+15); }
       }
-      let curY = levelY(level), curN = level;
+      let curY = yOf(level);
       if (anim) {
-        anim.t = Math.min(1, anim.t + dt/650);
+        anim.t = Math.min(1, anim.t + dt/(anim.dir==='emit'?520:600));
         const ease = anim.t<0.5 ? 2*anim.t*anim.t : 1-Math.pow(-2*anim.t+2,2)/2;
-        curY = levelY(anim.from) + (levelY(anim.to)-levelY(anim.from))*ease;
-        curN = anim.to;
+        curY = yOf(anim.from) + (yOf(anim.to)-yOf(anim.from))*ease;
+        // transition arrow showing the size of the jump, in the photon's color
+        const col = anim.wl ? wavelengthToRGB(anim.wl) : '#f59e0b';
+        const yA = yOf(anim.from), yB = yOf(anim.to), adir = anim.to>anim.from ? -1 : 1;
+        ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = 0.85;
+        ctx.beginPath(); ctx.moveTo(405, yA); ctx.lineTo(405, yB); ctx.stroke();
+        ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(405, yB); ctx.lineTo(400, yB-8*adir); ctx.lineTo(410, yB-8*adir); ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.font='700 10px Roboto Mono'; ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(anim.dir==='emit' ? anim.wl+' nm' : 'absorb', 414, (yA+yB)/2);
         if (anim.t >= 1) {
           level = anim.to;
           if (anim.dir === 'emit') {
-            const wl = [null, null, 650, 520, 440][anim.from] || 500; // bigger fall = bluer
-            photon = { x: 275, y: levelY(anim.to), wl: 700 - (anim.from-anim.to)*70 - anim.to*40, life: 1 };
+            photon = { x: EX+12, y: yOf(level), wl: anim.wl, life: 1 };
+            const drop = anim.from - anim.to;
+            const size = drop>=3 ? '<strong>Big drop</strong>' : drop===1 ? 'Small drop' : 'Medium drop';
+            status.innerHTML = `Fell <strong>n=${anim.from} → n=${anim.to}</strong>. ${size} → <strong style="color:${wavelengthToRGB(anim.wl)}">${anim.wl} nm</strong> (${colorName(anim.wl)} light).`;
+          } else {
+            status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung means more energy stored.`;
           }
           anim = null;
-          status.innerHTML = `Electron is now in <strong>n = ${level}</strong>.`;
         }
       }
-      // incoming photon arrow during absorb
-      if (anim && anim.dir==='absorb') {
-        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth=3; ctx.beginPath();
-        ctx.moveTo(70, curY); ctx.lineTo(150, curY); ctx.stroke();
-        ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.moveTo(150,curY); ctx.lineTo(140,curY-6); ctx.lineTo(140,curY+6); ctx.fill();
-        ctx.fillStyle='#b45309'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='left'; ctx.fillText('photon in', 60, curY-12);
-      }
-      // emitted photon
+      // emitted photon — vivid, colored by the size of the fall
       if (photon) {
-        photon.x += dt*0.35; photon.life -= dt/1400;
-        const col = wavelengthToRGB(Math.max(410, Math.min(680, photon.wl)));
-        for (let k=0;k<5;k++){ ctx.strokeStyle=col; ctx.globalAlpha=photon.life*0.8; ctx.lineWidth=2.4;
-          ctx.beginPath(); const yy=photon.y + Math.sin((photon.x-260)/14 + k)*6;
-          ctx.moveTo(photon.x-k*14, yy); ctx.lineTo(photon.x-k*14-10, photon.y); ctx.stroke(); }
-        ctx.globalAlpha=1;
+        photon.x += dt*0.34; photon.life -= dt/1500;
+        const col = wavelengthToRGB(photon.wl);
+        ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.strokeStyle = col;
+        ctx.globalAlpha = Math.max(0, photon.life); ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let k=0;k<20;k++){ const px=photon.x+k*7, py=photon.y+Math.sin(k+photon.x/7)*7; k===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }
+        ctx.stroke(); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
         if (photon.life<=0) photon=null;
       }
       // electron
-      const ex=275, ey=curY;
+      const ex=EX, ey=curY;
       const g=ctx.createRadialGradient(ex,ey,0,ex,ey,18); g.addColorStop(0,'rgba(129,140,248,0.7)'); g.addColorStop(1,'rgba(129,140,248,0)');
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(ex,ey,18,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(ex,ey,10,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#fff'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('e⁻', ex, ey);
     };
-    stage.append(el('div',{class:'tool-row'},[up,down]), status, el('div',{class:'caption'},'A bigger fall releases higher-energy, bluer light.'));
+    stage.append(el('div',{class:'tool-row'},[up,down]), status, el('div',{class:'caption'},'Rungs crowd near the top, so the gaps are unequal. Bigger fall = higher energy = shorter wavelength (bluer).'));
   }
 });
 
-// ---- Step 4: Emission spectrum / Balmer ----
+// ---- Step 5: Emission spectrum / Balmer ----
 scenes.push({
-  step: 'Step 4: Emission Spectra (Balmer Series)',
+  step: 'Step 5: Emission Spectra (Balmer Series)',
   seeLabel: 'Hydrogen spectrum simulator',
-  heading: 'Step 4: Emission Spectra',
+  heading: 'Step 5: Emission Spectra',
   notes: "When an excited electron falls to energy level <strong>n = 2</strong>, it releases <strong>visible light</strong>. These transitions are the <strong>Balmer series</strong>. A bigger fall releases bluer light; a smaller fall releases redder light.",
   notebook: "Click all four Balmer jumps. Copy the spectrum that appears. Label which jump made the <strong>red</strong> line and which made the <strong>violet</strong> line.",
   build(stage) {
@@ -878,11 +999,11 @@ scenes.push({
   }
 });
 
-// ---- Step 5: Flame tests ----
+// ---- Step 6: Flame tests ----
 scenes.push({
-  step: 'Step 5: Flame Tests',
+  step: 'Step 6: Flame Tests',
   seeLabel: 'Flame test bench',
-  heading: 'Step 5: Flame Tests',
+  heading: 'Step 6: Flame Tests',
   notes: "In a flame test, heat <strong>excites electrons</strong>. As they fall back, each element emits photons of its own <strong>signature color</strong>. That is why every element burns a different color, and it is the same physics as the emission spectrum.",
   notebook: "Test 3 elements. Write each element and its flame color. Explain in one sentence why <strong>copper</strong> and <strong>sodium</strong> look different.",
   build(stage) {
@@ -949,19 +1070,19 @@ scenes.push({
   }
 });
 
-// ---- Step 6: Isotopes vs Ions ----
+// ---- Step 7: Isotopes vs Ions ----
 scenes.push({
-  step: 'Step 6: Isotopes vs. Ions',
+  step: 'Step 7: Isotopes vs. Ions',
   seeLabel: 'Isotope & ion explorer',
-  heading: 'Step 6: Isotopes vs. Ions',
+  heading: 'Step 7: Isotopes vs. Ions',
   notes: "<strong>Isotopes</strong> have the same number of protons but different numbers of <strong>neutrons</strong> (Carbon-12 vs Carbon-13). <strong>Ions</strong> form by gaining or losing <strong>electrons</strong>. <strong>Cations</strong> are positive (lost electrons); <strong>anions</strong> are negative (gained electrons).",
   notebook: "Make one isotope and one ion in the tool. Write what changed in each: <strong>neutrons</strong> for the isotope, <strong>electrons</strong> for the ion.",
   build(stage) {
-    const { c, ctx } = makeCanvas(stage, 600, 330);
+    const { c, ctx } = makeCanvas(stage, 600, 300);
     // left atom = isotope of carbon, right atom = ion of sodium
     let neutrons = 6;   // C: 6 (C-12) or 7 (C-13) or 8 (C-14)
     let charge = 0;     // Na ion charge: -1,0,+1
-    const CXc = 165, CXn = 440, CY = 150;
+    const CXc = 165, CXn = 440, CY = 140;
     const cloudC = new ElectronCloud(CXc, CY);
     const cloudN = new ElectronCloud(CXn, CY);
     const isoBtns = el('div',{class:'tool-row'}, [6,7,8].map(nv => el('button',{type:'button',class:'chip'+(nv===neutrons?' active':''),'data-n':nv,
@@ -980,8 +1101,8 @@ scenes.push({
       drawNucleus(ctx, CXn, CY, 11, 12);
       cloudN.setCounts(shellsFor(11 - charge)); cloudN.update(dt); cloudN.draw(ctx, { valence: true }); // electrons = 11 - charge
       ctx.fillStyle='#7C6F5A'; ctx.font='700 12px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('ISOTOPE · neutrons change', CXc, 312);
-      ctx.fillText('ION · electrons change', CXn, 312);
+      ctx.fillText('ISOTOPE · neutrons change', CXc, 286);
+      ctx.fillText('ION · electrons change', CXn, 286);
     };
     stage.append(
       el('div',{class:'eyebrow-sm',style:'text-align:center'},'Change the carbon isotope'), isoBtns,
@@ -991,11 +1112,11 @@ scenes.push({
   }
 });
 
-// ---- Step 7: Particle counter ----
+// ---- Step 8: Particle counter ----
 scenes.push({
-  step: 'Step 7: Counting Particles in Ions',
+  step: 'Step 8: Counting Particles in Ions',
   seeLabel: 'Particle counter',
-  heading: 'Step 7: Protons, Neutrons, Electrons',
+  heading: 'Step 8: Protons, Neutrons, Electrons',
   notes: "<strong>Protons</strong> come from the atomic number. <strong>Neutrons</strong> = mass number minus protons. For an ion, <strong>electrons</strong> = protons minus the charge: lose electrons for a +, gain electrons for a −.",
   notebook: "Fill the table. For ³⁵Cl⁻ show your work: <strong>17 protons, 18 neutrons, 18 electrons</strong>. Then check yourself.",
   build(stage) {
@@ -1023,11 +1144,11 @@ scenes.push({
   }
 });
 
-// ---- Step 8: Relative atomic mass calculator ----
+// ---- Step 9: Relative atomic mass calculator ----
 scenes.push({
-  step: 'Step 8: Relative Atomic Mass (Aᵣ)',
+  step: 'Step 9: Relative Atomic Mass (Aᵣ)',
   seeLabel: 'Aᵣ calculator',
-  heading: 'Step 8: Relative Atomic Mass',
+  heading: 'Step 9: Relative Atomic Mass',
   notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, add the results, then divide by the total abundance (usually 1.00 or 100).",
   notebook: "Run copper in the tool. Copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.6</strong>.",
   build(stage) {
@@ -1056,11 +1177,11 @@ scenes.push({
   }
 });
 
-// ---- Step 9: Solving for percent abundance (Lithium walkthrough) ----
+// ---- Step 10: Solving for percent abundance (Lithium walkthrough) ----
 scenes.push({
-  step: 'Step 9: Solving for Percent Abundance',
+  step: 'Step 10: Solving for Percent Abundance',
   seeLabel: 'Lithium walkthrough',
-  heading: 'Step 9: Find an Unknown Abundance',
+  heading: 'Step 10: Find an Unknown Abundance',
   notes: "When abundances are unknown, let one isotope be <strong>x</strong> and the other be <strong>1 − x</strong>. Plug both into the Aᵣ equation and solve for x. Then x and 1 − x are your two abundances.",
   notebook: "Follow the lithium walkthrough. Copy every line. Box the final answer: about <strong>5.9% Li-6 and 94.1% Li-7</strong>.",
   build(stage) {
@@ -1088,11 +1209,11 @@ scenes.push({
   }
 });
 
-// ---- Step 10: Summary & Check for Understanding ----
+// ---- Step 11: Summary & Check for Understanding ----
 scenes.push({
-  step: 'Step 10: Summary & Check for Understanding',
+  step: 'Step 11: Summary & Check for Understanding',
   seeLabel: 'Summary',
-  heading: 'Step 10: Pull It Together',
+  heading: 'Step 11: Pull It Together',
   notes: "<strong>Module 1:</strong> The Bohr model explains light through quantized electron jumps. <strong>Module 2:</strong> The periodic table shows average masses because elements are mixtures of isotopes.",
   notebook: "Answer each question first, then reveal the solution and check your work. Fix anything you missed.",
   build(stage) {
