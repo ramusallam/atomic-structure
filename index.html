@@ -497,44 +497,104 @@ function loop(ts) {
 requestAnimationFrame(loop);
 
 // =====================================================
-//  Reusable: orbiting Bohr atom renderer
+//  Electron-cloud atom renderer
+//  Shells are clickable rings, but electrons buzz around
+//  sporadically (probability cloud), not on clean orbits.
 // =====================================================
-function drawBohr(ctx, cx, cy, shells, protons, neutrons, t, opts={}) {
-  const radii = [62, 108, 156, 204];
-  // shells
-  for (let i = 0; i < shells.length; i++) {
-    ctx.strokeStyle = 'rgba(99,102,241,0.30)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cx, cy, radii[i], 0, Math.PI*2); ctx.stroke();
-  }
-  // nucleus
-  const ng = ctx.createRadialGradient(cx-6, cy-6, 2, cx, cy, 34);
+const RADII = [46, 82, 118, 154];
+
+function drawNucleus(ctx, cx, cy, protons, neutrons) {
+  const ng = ctx.createRadialGradient(cx-6, cy-6, 2, cx, cy, 32);
   ng.addColorStop(0, '#fca5a5'); ng.addColorStop(1, '#ef4444');
   ctx.fillStyle = ng;
-  ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 27, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#fff';
-  ctx.font = '700 13px Roboto Mono, monospace';
+  ctx.font = '700 12px Roboto Mono, monospace';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(`${protons}p`, cx, cy - 8);
-  ctx.fillText(`${neutrons}n`, cx, cy + 9);
-  // electrons
-  for (let i = 0; i < shells.length; i++) {
-    const count = shells[i];
-    const rr = radii[i];
-    const speed = 0.0004 / (i+1);
-    const base = t * speed + i * 0.6;
-    for (let e = 0; e < count; e++) {
-      const a = base + (e / count) * Math.PI * 2;
-      const ex = cx + Math.cos(a) * rr;
-      const ey = cy + Math.sin(a) * rr;
-      const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 14);
-      g.addColorStop(0, 'rgba(129,140,248,0.7)'); g.addColorStop(1, 'rgba(129,140,248,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, 14, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#6366f1';
-      ctx.beginPath(); ctx.arc(ex, ey, 7, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = '700 9px Roboto Mono, monospace';
-      ctx.fillText('-', ex, ey);
+  ctx.fillText(`${protons}p`, cx, cy - 7);
+  ctx.fillText(`${neutrons}n`, cx, cy + 8);
+}
+
+class ElectronCloud {
+  constructor(cx, cy) { this.cx = cx; this.cy = cy; this.shells = [[],[],[],[]]; }
+  setCounts(counts) {
+    for (let i = 0; i < 4; i++) {
+      const want = counts[i] || 0;
+      const arr = this.shells[i];
+      while (arr.length < want) arr.push({
+        ang: Math.random()*Math.PI*2,
+        av: (Math.random()-0.5)*0.03,
+        rPhase: Math.random()*Math.PI*2,
+        rSpeed: 0.6 + Math.random()*0.9,
+        jx: 0, jy: 0, trail: []
+      });
+      while (arr.length > want) arr.pop();
+    }
+  }
+  update(dt) {
+    const f = dt * 0.06;
+    for (let i = 0; i < 4; i++) {
+      const dir = (i % 2) ? -1 : 1;
+      for (const p of this.shells[i]) {
+        // random walk on angular velocity -> sporadic, not clockwork
+        p.av += (Math.random()-0.5) * 0.012;
+        p.av = Math.max(-0.07, Math.min(0.07, p.av)) * 0.94;
+        p.ang += p.av + dir * 0.0009 * f;
+        p.rPhase += 0.004 * p.rSpeed * f;
+        // bee-buzz jitter
+        p.jx = (p.jx + (Math.random()-0.5)*1.8) * 0.8;
+        p.jy = (p.jy + (Math.random()-0.5)*1.8) * 0.8;
+      }
+    }
+  }
+  occupiedShell() { return this.shells.reduce((m,a,i)=> a.length ? i : m, -1); }
+  draw(ctx, opts={}) {
+    const occ = this.occupiedShell();
+    // cloud bands + dashed clickable ring guides
+    for (let i = 0; i < 4; i++) {
+      if (!this.shells[i].length) continue;
+      const r = RADII[i];
+      const isVal = opts.valence && i === occ;
+      const col = isVal ? '168,85,247' : '99,102,241';
+      const bIn = r - 15, bOut = r + 15;
+      const grad = ctx.createRadialGradient(this.cx, this.cy, bIn, this.cx, this.cy, bOut);
+      grad.addColorStop(0, `rgba(${col},0)`);
+      grad.addColorStop(0.5, `rgba(${col},0.12)`);
+      grad.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(this.cx, this.cy, bOut, 0, Math.PI*2);
+      ctx.arc(this.cx, this.cy, bIn, 0, Math.PI*2, true);
+      ctx.fill();
+      ctx.strokeStyle = isVal ? 'rgba(168,85,247,0.5)' : 'rgba(99,102,241,0.32)';
+      ctx.setLineDash([3,6]); ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(this.cx, this.cy, r, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // electrons (with fading buzz trail)
+    for (let i = 0; i < 4; i++) {
+      const r = RADII[i];
+      const isVal = opts.valence && i === occ;
+      const core = isVal ? '#a855f7' : '#6366f1';
+      const glow = isVal ? '168,85,247' : '129,140,248';
+      for (const p of this.shells[i]) {
+        const rr = r + Math.sin(p.rPhase) * 10;
+        const ex = this.cx + Math.cos(p.ang)*rr + p.jx;
+        const ey = this.cy + Math.sin(p.ang)*rr + p.jy;
+        p.trail.unshift({x:ex, y:ey}); if (p.trail.length > 6) p.trail.pop();
+        for (let k = p.trail.length-1; k > 0; k--) {
+          const tp = p.trail[k]; const a = (1 - k/p.trail.length) * 0.22;
+          ctx.fillStyle = `rgba(${glow},${a})`;
+          ctx.beginPath(); ctx.arc(tp.x, tp.y, 4.5, 0, Math.PI*2); ctx.fill();
+        }
+        const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 12);
+        g.addColorStop(0, `rgba(${glow},0.6)`); g.addColorStop(1, `rgba(${glow},0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, 12, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = core; ctx.beginPath(); ctx.arc(ex, ey, 5.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '700 8px Roboto Mono, monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('-', ex, ey);
+      }
     }
   }
 }
@@ -593,53 +653,67 @@ scenes.push({
   step: 'Step 2: The Bohr Model & Electron Shells',
   seeLabel: 'Bohr model builder',
   heading: 'Step 2: Electron Shells',
-  notes: "Electrons orbit in <strong>shells</strong> with set capacities: the 1st shell holds <strong>2</strong>, the 2nd holds <strong>8</strong>, the 3rd holds <strong>8</strong> (for the first 20 elements). Calcium (20 protons) fills as <strong>2, 8, 8, 2</strong>.",
-  notebook: "Build <strong>Lithium</strong> and <strong>Calcium</strong> in the tool. Draw both Bohr diagrams. Label how many electrons each shell holds.",
+  notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. They buzz around like a cloud, but you can still tell which level they are in. Capacities: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds.",
+  notebook: "Build <strong>Lithium</strong> and <strong>Calcium</strong>. Draw both diagrams. Label each shell's count, then circle the <strong>valence electrons</strong> (outer shell) and write how many there are.",
   build(stage) {
     const atoms = [3,6,8,11,12,17,19,20];
     let z = 3;
     let placed = [0,0,0,0];
     const caps = [2,8,8,2];
-    const { c, ctx } = makeCanvas(stage, 520, 360);
+    const CX = 260, CY = 185;
+    const { c, ctx } = makeCanvas(stage, 520, 370);
+    const cloud = new ElectronCloud(CX, CY);
     const status = el('div', { class:'spectrum-readout' });
+    const valEl = el('div', { class:'spectrum-readout', style:'font-weight:700;color:var(--accentPurple)' });
     const chips = el('div', { class:'tool-row' }, atoms.map(a => el('button', {
-      class: 'chip' + (a===z?' active':''), 'data-z':a,
+      type:'button', class: 'chip' + (a===z?' active':''), 'data-z':a,
       onclick(){ z=a; placed=[0,0,0,0]; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', +ch.dataset.z===z)); render(); }
     }, ELEMENTS[a].s)));
-    const reset = el('button', {}, 'Reset electrons');
+    const reset = el('button', { type:'button' }, 'Reset electrons');
     reset.addEventListener('click', () => { placed=[0,0,0,0]; render(); });
     const target = () => shellsFor(z);
     const totalPlaced = () => placed.reduce((a,b)=>a+b,0);
-    const radii = [62,108,156,204];
+    const outerOcc = () => placed.reduce((m,v,i)=> v>0 ? i : m, -1);
     function render() {
       const tg = target();
       const done = totalPlaced() === z && tg.every((v,i)=>v===(placed[i]||0));
-      if (totalPlaced() === 0) status.innerHTML = `Click a shell ring to add an electron. ${ELEMENTS[z].s} needs <strong>${z}</strong> electrons.`;
+      if (totalPlaced() === 0) status.innerHTML = `Click a shell cloud to drop an electron in. ${ELEMENTS[z].s} needs <strong>${z}</strong> electrons.`;
       else if (done) status.innerHTML = `<span class="answer-pill">Correct</span> &nbsp;${ELEMENTS[z].n}: ${tg.join(', ')}`;
-      else status.innerHTML = `Placed ${totalPlaced()} of ${z}. Current: ${placed.slice(0, Math.max(1,placed.findLastIndex(v=>v>0)+1)).join(', ')||'0'}`;
+      else status.innerHTML = `Placed ${totalPlaced()} of ${z}. Current: ${placed.slice(0, Math.max(1, outerOcc()+1)).join(', ')||'0'}`;
+      const occ = outerOcc();
+      valEl.innerHTML = occ < 0 ? '&nbsp;'
+        : `Valence electrons: <span class="readout">${placed[occ]}</span> &nbsp;(outer shell, energy level ${occ+1})`;
     }
     c.addEventListener('click', (ev) => {
       const p = canvasPos(c, ev);
-      const d = Math.hypot(p.x - 260, p.y - 180);
-      let shell = -1, best = 30;
-      radii.forEach((r,i) => { if (Math.abs(d-r) < best) { best = Math.abs(d-r); shell = i; } });
+      const d = Math.hypot(p.x - CX, p.y - CY);
+      let shell = -1, best = 26;
+      RADII.forEach((r,i) => { if (Math.abs(d-r) < best) { best = Math.abs(d-r); shell = i; } });
       if (shell < 0) return;
       if ((placed[shell]||0) < caps[shell] && totalPlaced() < z) { placed[shell] = (placed[shell]||0)+1; render(); }
     });
-    currentTick = () => {
+    currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
       const mass = Math.round(ELEMENTS[z].m);
-      drawBohr(ctx, 260, 180, placed.map(v=>v), z, mass - z, performance.now());
-      // ghost target counts on each ring
+      drawNucleus(ctx, CX, CY, z, mass - z);
+      cloud.setCounts(placed);
+      cloud.update(dt);
+      cloud.draw(ctx, { valence: true });
+      // ghost capacity counts above each ring
       ctx.font = '700 11px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      const tg = target();
-      for (let i=0;i<radii.length;i++){
-        const cap = caps[i];
-        ctx.fillStyle = 'rgba(124,111,90,0.55)';
-        ctx.fillText(`${placed[i]||0}/${cap}`, 260, 180 - radii[i] - 2);
+      for (let i=0;i<RADII.length;i++){
+        ctx.fillStyle = 'rgba(124,111,90,0.6)';
+        ctx.fillText(`${placed[i]||0}/${caps[i]}`, CX, CY - RADII[i] - 9);
+      }
+      // valence-shell label
+      const occ = outerOcc();
+      if (occ >= 0) {
+        ctx.fillStyle = 'rgba(168,85,247,0.95)'; ctx.font = '700 11px Roboto Mono, monospace';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText('← valence shell', CX + RADII[occ] + 8, CY);
       }
     };
-    stage.append(chips, status, reset, el('div',{class:'caption'},'Shell capacities: 2, 8, 8, 2 for the first 20 elements.'));
+    stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Electrons buzz like a probability cloud. The outer shell (purple) holds the valence electrons.'));
     render();
   }
 });
@@ -860,28 +934,31 @@ scenes.push({
   notes: "<strong>Isotopes</strong> have the same number of protons but different numbers of <strong>neutrons</strong> (Carbon-12 vs Carbon-13). <strong>Ions</strong> form by gaining or losing <strong>electrons</strong>. <strong>Cations</strong> are positive (lost electrons); <strong>anions</strong> are negative (gained electrons).",
   notebook: "Make one isotope and one ion in the tool. Write what changed in each: <strong>neutrons</strong> for the isotope, <strong>electrons</strong> for the ion.",
   build(stage) {
-    const { c, ctx } = makeCanvas(stage, 540, 320);
+    const { c, ctx } = makeCanvas(stage, 600, 330);
     // left atom = isotope of carbon, right atom = ion of sodium
     let neutrons = 6;   // C: 6 (C-12) or 7 (C-13) or 8 (C-14)
     let charge = 0;     // Na ion charge: -1,0,+1
-    const isoBtns = el('div',{class:'tool-row'}, [6,7,8].map(nv => el('button',{class:'chip'+(nv===neutrons?' active':''),'data-n':nv,
+    const CXc = 165, CXn = 440, CY = 150;
+    const cloudC = new ElectronCloud(CXc, CY);
+    const cloudN = new ElectronCloud(CXn, CY);
+    const isoBtns = el('div',{class:'tool-row'}, [6,7,8].map(nv => el('button',{type:'button',class:'chip'+(nv===neutrons?' active':''),'data-n':nv,
       onclick(){ neutrons=nv; isoBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.n===nv)); render(); }}, `C-${6+nv}`)));
-    const ionBtns = el('div',{class:'tool-row'}, [['+1',1],['0',0],['−1',-1]].map(([lab,cv]) => el('button',{class:'chip'+(cv===charge?' active':''),'data-c':cv,
+    const ionBtns = el('div',{class:'tool-row'}, [['+1',1],['0',0],['−1',-1]].map(([lab,cv]) => el('button',{type:'button',class:'chip'+(cv===charge?' active':''),'data-c':cv,
       onclick(){ charge=cv; ionBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.c===cv)); render(); }}, `Na ${lab}`)));
     const readout = el('div',{class:'spectrum-readout'});
     function render(){
-      const cation = charge>0, anion = charge<0;
       readout.innerHTML = `Left: <strong>Carbon-${6+neutrons}</strong> (6 protons, ${neutrons} neutrons) is an <strong>isotope</strong>. ` +
         `Right: <strong>Na${charge>0?'⁺':charge<0?'⁻':''}</strong> ${charge===0?'is neutral':charge>0?'is a cation (lost 1 electron)':'is an anion (gained 1 electron)'}.`;
     }
-    currentTick = () => {
+    currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
-      const t = performance.now();
-      drawBohr(ctx, 145, 150, shellsFor(6), 6, neutrons, t);
-      drawBohr(ctx, 400, 150, shellsFor(11 - charge), 11, 12, t); // electrons = 11 - charge
-      ctx.fillStyle='#7C6F5A'; ctx.font='700 12px Roboto Mono'; ctx.textAlign='center';
-      ctx.fillText('ISOTOPE · neutrons change', 145, 300);
-      ctx.fillText('ION · electrons change', 400, 300);
+      drawNucleus(ctx, CXc, CY, 6, neutrons);
+      cloudC.setCounts(shellsFor(6)); cloudC.update(dt); cloudC.draw(ctx, { valence: true });
+      drawNucleus(ctx, CXn, CY, 11, 12);
+      cloudN.setCounts(shellsFor(11 - charge)); cloudN.update(dt); cloudN.draw(ctx, { valence: true }); // electrons = 11 - charge
+      ctx.fillStyle='#7C6F5A'; ctx.font='700 12px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('ISOTOPE · neutrons change', CXc, 312);
+      ctx.fillText('ION · electrons change', CXn, 312);
     };
     stage.append(
       el('div',{class:'eyebrow-sm',style:'text-align:center'},'Change the carbon isotope'), isoBtns,
