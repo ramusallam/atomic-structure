@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quantized Energy, the Bohr Model & Isotopes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Roboto+Mono:wght@400;700&family=Roboto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Spark Learning companion tokens */
+    --bgMain: #F7F3EE;
+    --bgPanel: #FFFFFF;
+    --bgCard: #FFFFFF;
+    --accentBlue: #6366f1;
+    --accentBlueHover: #4f46e5;
+    --accentPurple: #a855f7;
+    --accentGreen: #10b981;
+    --accentRed: #ef4444;
+    --accentYellow: #f59e0b;
+    --textPrimary: #1C1917;
+    --textSecondary: #57534E;
+    --textWarm: #2A2520;
+    --textWarmSecondary: #7C6F5A;
+    --textWarmMuted: #A0937B;
+    --borderColor: #E8E0D2;
+    --borderSubtle: #F0EBE3;
+    --shadow-sm: 0 1px 2px rgba(17,17,17,0.04), 0 1px 3px rgba(17,17,17,0.06);
+    --shadow-md: 0 4px 12px rgba(17,17,17,0.06), 0 2px 4px rgba(17,17,17,0.04);
+    --shadow-lg: 0 16px 40px rgba(17,17,17,0.10), 0 4px 12px rgba(17,17,17,0.06);
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-serif: 'Roboto Serif', Georgia, Cambria, serif;
+    --font-mono: 'Roboto Mono', monospace;
+    /* preserved student-copy note artifact */
+    --note-bg: #fdf1c6;
+    --note-ink: #2a1e08;
+    --note-head: #7a3a00;
+    /* domain colors */
+    --proton: #ef4444;
+    --neutron: #94a3b8;
+    --electron: #6366f1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bgMain);
+    color: var(--textPrimary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 16px 32px 10px;
+    max-width: 1340px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header .titles .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accentBlue);
+    margin-bottom: 3px;
+  }
+  header .titles h1 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--textWarm);
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  .step-indicator {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--textWarmMuted);
+    white-space: nowrap;
+  }
+  .progress-track {
+    max-width: 1340px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .progress-track .bar {
+    height: 4px;
+    background: var(--borderSubtle);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-track .fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accentBlue), var(--accentPurple));
+    border-radius: 999px;
+    transition: width 350ms ease;
+  }
+  main {
+    max-width: 1340px;
+    margin: 0 auto;
+    padding: 18px 32px 28px;
+  }
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.92fr);
+    gap: 26px;
+    align-items: stretch;
+  }
+  /* ---- stage (what students SEE) ---- */
+  .stage {
+    background: var(--bgCard);
+    border: 1px solid var(--borderColor);
+    border-top: 4px solid var(--accentBlue);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    padding: 20px;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.4s ease-out;
+  }
+  .stage-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accentBlue);
+    margin-bottom: 12px;
+  }
+  .stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 12px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---- side (what students WRITE) ---- */
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .notes-card {
+    background: var(--note-bg);
+    color: var(--note-ink);
+    padding: 16px 22px 14px;
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1.58;
+    box-shadow: var(--shadow-sm);
+    animation: fadeUp 0.4s ease-out;
+  }
+  .notes-card .nc-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--note-head);
+    margin-bottom: 6px;
+  }
+  .step-heading {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--note-head);
+    margin-bottom: 6px;
+  }
+  .notes-card p { margin: 0; }
+  .notes-card strong { font-weight: 700; color: var(--note-ink); }
+
+  .notebook-prompt {
+    background: #fff;
+    border: 1px solid var(--borderColor);
+    border-left: 4px solid var(--accentBlue);
+    border-radius: 12px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--textSecondary);
+    box-shadow: var(--shadow-sm);
+  }
+  .notebook-prompt .np-tag {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 4px 8px;
+    background: var(--accentBlue);
+    color: #fff;
+    border-radius: 6px;
+    margin-top: 1px;
+  }
+  .notebook-prompt strong { color: var(--textPrimary); font-weight: 700; }
+
+  nav {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 4px;
+  }
+  button {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--borderColor);
+    background: #fff;
+    color: var(--textPrimary);
+    cursor: pointer;
+    transition: background 140ms, border-color 140ms, transform 50ms, box-shadow 140ms;
+  }
+  button:hover:not(:disabled) { background: var(--bgMain); border-color: var(--textWarmMuted); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  button.primary {
+    background: var(--accentBlue);
+    color: #fff;
+    border-color: var(--accentBlue);
+    box-shadow: 0 4px 14px rgba(99,102,241,0.28);
+  }
+  button.primary:hover:not(:disabled) { background: var(--accentBlueHover); border-color: var(--accentBlueHover); }
+  .btn-group { display: flex; gap: 10px; }
+
+  /* ---- shared interactive bits ---- */
+  .tool-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--borderColor);
+    background: #fff;
+    color: var(--textPrimary);
+    cursor: pointer;
+    transition: all 140ms;
+  }
+  .chip:hover { border-color: var(--accentBlue); }
+  .chip.active { background: var(--accentBlue); color: #fff; border-color: var(--accentBlue); }
+  .readout {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow-sm {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--textWarmMuted);
+  }
+  .answer-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #166534;
+    background: rgba(16,185,129,0.14);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  /* element lookup */
+  .lookup {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .nuclear-symbol {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-serif);
+  }
+  .ns-stack { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
+  .ns-mass { font-size: 22px; font-weight: 700; color: var(--textWarm); }
+  .ns-num { font-size: 18px; font-weight: 700; color: var(--accentRed); }
+  .ns-sym { font-size: 76px; font-weight: 700; color: var(--accentBlue); line-height: 0.9; }
+  .lookup .el-name { font-family: var(--font-serif); font-size: 22px; font-weight: 700; color: var(--textWarm); }
+  .pne-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 460px; }
+  .pne-cell {
+    background: var(--bgMain);
+    border: 1px solid var(--borderColor);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .pne-cell .big { font-family: var(--font-mono); font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pne-cell .lab { font-size: 11px; font-weight: 600; color: var(--textSecondary); margin-top: 2px; }
+  .slider-row { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 460px; }
+  input[type=range] { flex: 1; accent-color: var(--accentBlue); height: 4px; }
+  .stepper-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 20px; font-weight: 700; padding: 0; }
+
+  /* particle counter table */
+  table.counter { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.counter th {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--textWarmMuted); font-weight: 700; padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--borderColor);
+  }
+  table.counter td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--borderSubtle); }
+  table.counter td.sym { font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: var(--textWarm); text-align: left; }
+  table.counter input {
+    width: 56px; text-align: center; font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    padding: 7px 4px; border: 1px solid var(--borderColor); border-radius: 8px; background: #fff; color: var(--textPrimary);
+  }
+  table.counter input:focus { outline: 2px solid var(--accentBlue); outline-offset: -1px; border-color: var(--accentBlue); }
+  table.counter input.ok { background: rgba(16,185,129,0.12); border-color: var(--accentGreen); color: #166534; }
+  table.counter input.no { background: rgba(239,68,68,0.10); border-color: var(--accentRed); }
+
+  /* calculators */
+  .calc-grid { display: grid; gap: 10px; }
+  .iso-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; font-weight: 600; color: var(--textSecondary); }
+  .field input {
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700; padding: 9px 10px;
+    border: 1px solid var(--borderColor); border-radius: 8px; background: #fff; color: var(--textPrimary);
+  }
+  .field input:focus { outline: 2px solid var(--accentBlue); outline-offset: -1px; }
+  .calc-steps {
+    background: var(--bgMain); border: 1px solid var(--borderColor); border-radius: 12px;
+    padding: 14px 16px; font-family: var(--font-mono); font-size: 14px; line-height: 1.9; color: var(--textPrimary);
+    min-height: 60px;
+  }
+  .calc-steps .res { color: var(--accentGreen); font-weight: 700; }
+  .calc-steps .muted { color: var(--textWarmMuted); }
+
+  /* reveal pattern (Check for Understanding + walkthrough) */
+  .reveal-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--accentBlue); color: #fff; border: none; border-radius: 999px;
+    font-weight: 700; font-size: 13px; padding: 8px 15px; cursor: pointer;
+  }
+  .reveal-btn:hover { background: var(--accentBlueHover); }
+  .reveal-content {
+    margin-top: 10px; padding: 12px 14px; background: var(--bgMain);
+    border: 1px solid var(--borderColor); border-left: 4px solid var(--accentGreen);
+    border-radius: 10px; font-size: 14px; line-height: 1.55; color: var(--textPrimary);
+    animation: fadeUp 0.25s ease-out;
+  }
+  .reveal-content[hidden] { display: none !important; }
+  .q-card { background: #fff; border: 1px solid var(--borderColor); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow-sm); }
+  .q-card + .q-card { margin-top: 12px; }
+  .q-card .q-text { font-weight: 600; font-size: 14.5px; margin-bottom: 10px; }
+  .q-num { font-family: var(--font-mono); color: var(--accentBlue); font-weight: 700; margin-right: 6px; }
+
+  .summary-card {
+    background: #fff; border: 1px solid var(--borderColor); border-radius: 14px;
+    padding: 14px 18px; box-shadow: var(--shadow-sm); border-left: 4px solid var(--accentPurple);
+  }
+  .summary-card .sc-tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accentPurple); margin-bottom: 4px; }
+  .summary-card p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--textPrimary); }
+
+  .pb-progress { margin-top: 4px; }
+  .pb-bar { height: 5px; background: var(--borderSubtle); border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
+  .pb-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accentBlue), var(--accentGreen)); transition: width 300ms ease; }
+  .pb-text { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--textWarmMuted); }
+  .pb-text.complete { color: #166534; }
+
+  .hint { font-size: 12px; color: var(--textWarmMuted); text-align: center; font-style: italic; }
+  .caption { font-style: italic; font-size: 12px; color: var(--textWarmMuted); text-align: center; }
+  .spectrum-readout { font-family: var(--font-mono); font-size: 13px; text-align: center; color: var(--textSecondary); min-height: 18px; }
+
+  @media (max-width: 980px) {
+    .workspace { grid-template-columns: 1fr; }
+    .stage { min-height: 380px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="titles">
+    <div class="eyebrow">Chemistry · Atomic Structure</div>
+    <h1>Quantized Energy, the Bohr Model &amp; Isotopes</h1>
+  </div>
+  <div class="step-indicator" id="stepIndicator">01 / 10</div>
+</header>
+<div class="progress-track"><div class="bar"><div class="fill" id="progressFill"></div></div></div>
+
+<main>
+  <div class="workspace">
+    <div class="stage">
+      <div class="stage-label" id="stageLabel">What you see</div>
+      <div class="stage-body" id="stage"></div>
+    </div>
+
+    <div class="side">
+      <div class="notes-card">
+        <div class="nc-tag">📝 Copy Into Your Notes</div>
+        <div class="step-heading" id="stepHeading"></div>
+        <p id="notes"></p>
+      </div>
+      <div class="notebook-prompt">
+        <div class="np-tag">✎ DO</div>
+        <div id="notebookText"></div>
+      </div>
+      <nav>
+        <button id="resetBtn">Start Over</button>
+        <div class="btn-group">
+          <button id="prevBtn">← Back</button>
+          <button id="nextBtn" class="primary">Next →</button>
+        </div>
+      </nav>
+    </div>
+  </div>
+</main>
+
+<script>
+// =====================================================
+//  Data
+// =====================================================
+const ELEMENTS = {
+  1:{s:'H',n:'Hydrogen',m:1.008}, 2:{s:'He',n:'Helium',m:4.003},
+  3:{s:'Li',n:'Lithium',m:6.94}, 4:{s:'Be',n:'Beryllium',m:9.012},
+  5:{s:'B',n:'Boron',m:10.81}, 6:{s:'C',n:'Carbon',m:12.011},
+  7:{s:'N',n:'Nitrogen',m:14.007}, 8:{s:'O',n:'Oxygen',m:15.999},
+  9:{s:'F',n:'Fluorine',m:18.998}, 10:{s:'Ne',n:'Neon',m:20.180},
+  11:{s:'Na',n:'Sodium',m:22.990}, 12:{s:'Mg',n:'Magnesium',m:24.305},
+  13:{s:'Al',n:'Aluminium',m:26.982}, 14:{s:'Si',n:'Silicon',m:28.085},
+  15:{s:'P',n:'Phosphorus',m:30.974}, 16:{s:'S',n:'Sulfur',m:32.06},
+  17:{s:'Cl',n:'Chlorine',m:35.45}, 18:{s:'Ar',n:'Argon',m:39.948},
+  19:{s:'K',n:'Potassium',m:39.098}, 20:{s:'Ca',n:'Calcium',m:40.078},
+  26:{s:'Fe',n:'Iron',m:55.845}, 29:{s:'Cu',n:'Copper',m:63.546},
+  35:{s:'Br',n:'Bromine',m:79.904}, 38:{s:'Sr',n:'Strontium',m:87.62},
+  56:{s:'Ba',n:'Barium',m:137.327}
+};
+function shellsFor(z) {
+  const caps = [2, 8, 8, 2];
+  const out = [];
+  let rem = z;
+  for (const c of caps) { const e = Math.min(rem, c); out.push(e); rem -= e; if (rem <= 0) break; }
+  return out;
+}
+
+// =====================================================
+//  Helpers
+// =====================================================
+const $ = (sel, root=document) => root.querySelector(sel);
+function el(tag, attrs={}, kids=[]) {
+  const n = document.createElement(tag);
+  for (const k in attrs) {
+    if (k === 'class') n.className = attrs[k];
+    else if (k === 'html') n.innerHTML = attrs[k];
+    else if (k.startsWith('on') && typeof attrs[k] === 'function') n.addEventListener(k.slice(2), attrs[k]);
+    else n.setAttribute(k, attrs[k]);
+  }
+  (Array.isArray(kids) ? kids : [kids]).forEach(c => { if (c != null) n.append(c.nodeType ? c : document.createTextNode(c)); });
+  return n;
+}
+function makeCanvas(stage, w, h) {
+  const c = el('canvas');
+  c.width = w; c.height = h;
+  c.style.maxWidth = (w) + 'px';
+  c.style.margin = '0 auto';
+  stage.append(c);
+  return { c, ctx: c.getContext('2d') };
+}
+function canvasPos(c, e) {
+  const r = c.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * c.width / r.width, y: (e.clientY - r.top) * c.height / r.height };
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath();
+}
+// approximate visible-wavelength to RGB (380-720nm)
+function wavelengthToRGB(wl) {
+  let r=0, g=0, b=0;
+  if (wl >= 380 && wl < 440) { r = -(wl-440)/60; b = 1; }
+  else if (wl < 490) { g = (wl-440)/50; b = 1; }
+  else if (wl < 510) { g = 1; b = -(wl-510)/20; }
+  else if (wl < 580) { r = (wl-510)/70; g = 1; }
+  else if (wl < 645) { r = 1; g = -(wl-645)/65; }
+  else if (wl <= 720) { r = 1; }
+  const f = wl < 420 ? 0.3 + 0.7*(wl-380)/40 : wl > 700 ? 0.3 + 0.7*(720-wl)/20 : 1;
+  const ch = v => Math.round(255 * Math.pow(Math.max(0, Math.min(1, v)) * f, 0.8));
+  return `rgb(${ch(r)},${ch(g)},${ch(b)})`;
+}
+
+// =====================================================
+//  Animation loop (current scene may register a tick)
+// =====================================================
+let currentTick = null;
+let lastTs = null;
+function loop(ts) {
+  if (lastTs == null) lastTs = ts;
+  const dt = Math.min(50, ts - lastTs);
+  lastTs = ts;
+  if (currentTick) currentTick(dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// =====================================================
+//  Reusable: orbiting Bohr atom renderer
+// =====================================================
+function drawBohr(ctx, cx, cy, shells, protons, neutrons, t, opts={}) {
+  const radii = [62, 108, 156, 204];
+  // shells
+  for (let i = 0; i < shells.length; i++) {
+    ctx.strokeStyle = 'rgba(99,102,241,0.30)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, radii[i], 0, Math.PI*2); ctx.stroke();
+  }
+  // nucleus
+  const ng = ctx.createRadialGradient(cx-6, cy-6, 2, cx, cy, 34);
+  ng.addColorStop(0, '#fca5a5'); ng.addColorStop(1, '#ef4444');
+  ctx.fillStyle = ng;
+  ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '700 13px Roboto Mono, monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(`${protons}p`, cx, cy - 8);
+  ctx.fillText(`${neutrons}n`, cx, cy + 9);
+  // electrons
+  for (let i = 0; i < shells.length; i++) {
+    const count = shells[i];
+    const rr = radii[i];
+    const speed = 0.0004 / (i+1);
+    const base = t * speed + i * 0.6;
+    for (let e = 0; e < count; e++) {
+      const a = base + (e / count) * Math.PI * 2;
+      const ex = cx + Math.cos(a) * rr;
+      const ey = cy + Math.sin(a) * rr;
+      const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 14);
+      g.addColorStop(0, 'rgba(129,140,248,0.7)'); g.addColorStop(1, 'rgba(129,140,248,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, 14, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#6366f1';
+      ctx.beginPath(); ctx.arc(ex, ey, 7, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 9px Roboto Mono, monospace';
+      ctx.fillText('-', ex, ey);
+    }
+  }
+}
+
+// superscript helper for symbols like  35-Cl-minus
+function sup(s){ return `<span style="font-size:0.72em;vertical-align:0.5em">${s}</span>`; }
+function sub(s){ return `<span style="font-size:0.72em;vertical-align:-0.3em">${s}</span>`; }
+
+// =====================================================
+//  SCENES
+// =====================================================
+const scenes = [];
+
+// ---- Step 1: Identity & nuclear symbol ----
+scenes.push({
+  step: 'Step 1: The Nucleus and Identity',
+  seeLabel: 'Element identity tool',
+  heading: 'Step 1: Atomic Number = Identity',
+  notes: "The <strong>atomic number</strong> is the number of <strong>protons</strong>. It is the element's fingerprint: any atom with 6 protons must be carbon. The <strong>mass number</strong> is the number of <strong>protons plus neutrons</strong> in the nucleus.",
+  notebook: "Use the tool. Pick <strong>3 atomic numbers</strong>, write each element's name and its nuclear symbol. Circle the protons.",
+  build(stage) {
+    let z = 6;
+    const symWrap = el('div', { class: 'nuclear-symbol' });
+    const name = el('div', { class: 'el-name' });
+    const grid = el('div', { class: 'pne-grid' });
+    const pCell = el('div', { class: 'pne-cell' }, [el('div',{class:'big readout',style:'color:var(--proton)'}), el('div',{class:'lab'},'Protons')]);
+    const nCell = el('div', { class: 'pne-cell' }, [el('div',{class:'big readout',style:'color:var(--neutron)'}), el('div',{class:'lab'},'Neutrons')]);
+    const mCell = el('div', { class: 'pne-cell' }, [el('div',{class:'big readout',style:'color:var(--textWarm)'}), el('div',{class:'lab'},'Mass number')]);
+    grid.append(pCell, nCell, mCell);
+    const slider = el('input', { type:'range', min:1, max:20, value:z });
+    const minus = el('button', { class:'stepper-btn' }, '−');
+    const plus = el('button', { class:'stepper-btn' }, '+');
+    const sliderRow = el('div', { class:'slider-row' }, [minus, slider, plus]);
+    function render() {
+      const e = ELEMENTS[z]; const mass = Math.round(e.m); const neut = mass - z;
+      symWrap.innerHTML = `<span class="ns-stack"><span class="ns-mass">${mass}</span><span class="ns-num">${z}</span></span><span class="ns-sym">${e.s}</span>`;
+      name.textContent = e.n;
+      pCell.querySelector('.big').textContent = z;
+      nCell.querySelector('.big').textContent = neut;
+      mCell.querySelector('.big').textContent = mass;
+    }
+    slider.addEventListener('input', () => { z = +slider.value; render(); });
+    minus.addEventListener('click', () => { z = Math.max(1, z-1); slider.value = z; render(); });
+    plus.addEventListener('click', () => { z = Math.min(20, z+1); slider.value = z; render(); });
+    stage.append(el('div', { class:'lookup' }, [
+      el('div', { class:'eyebrow-sm' }, 'Drag to change the atomic number'),
+      symWrap, name, grid, sliderRow,
+      el('div', { class:'caption' }, 'Mass number (top) and atomic number (bottom) form the nuclear symbol.')
+    ]));
+    render();
+  }
+});
+
+// ---- Step 2: Bohr model & shells ----
+scenes.push({
+  step: 'Step 2: The Bohr Model & Electron Shells',
+  seeLabel: 'Bohr model builder',
+  heading: 'Step 2: Electron Shells',
+  notes: "Electrons orbit in <strong>shells</strong> with set capacities: the 1st shell holds <strong>2</strong>, the 2nd holds <strong>8</strong>, the 3rd holds <strong>8</strong> (for the first 20 elements). Calcium (20 protons) fills as <strong>2, 8, 8, 2</strong>.",
+  notebook: "Build <strong>Lithium</strong> and <strong>Calcium</strong> in the tool. Draw both Bohr diagrams. Label how many electrons each shell holds.",
+  build(stage) {
+    const atoms = [3,6,8,11,12,17,19,20];
+    let z = 3;
+    let placed = [0,0,0,0];
+    const caps = [2,8,8,2];
+    const { c, ctx } = makeCanvas(stage, 520, 360);
+    const status = el('div', { class:'spectrum-readout' });
+    const chips = el('div', { class:'tool-row' }, atoms.map(a => el('button', {
+      class: 'chip' + (a===z?' active':''), 'data-z':a,
+      onclick(){ z=a; placed=[0,0,0,0]; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', +ch.dataset.z===z)); render(); }
+    }, ELEMENTS[a].s)));
+    const reset = el('button', {}, 'Reset electrons');
+    reset.addEventListener('click', () => { placed=[0,0,0,0]; render(); });
+    const target = () => shellsFor(z);
+    const totalPlaced = () => placed.reduce((a,b)=>a+b,0);
+    const radii = [62,108,156,204];
+    function render() {
+      const tg = target();
+      const done = totalPlaced() === z && tg.every((v,i)=>v===(placed[i]||0));
+      if (totalPlaced() === 0) status.innerHTML = `Click a shell ring to add an electron. ${ELEMENTS[z].s} needs <strong>${z}</strong> electrons.`;
+      else if (done) status.innerHTML = `<span class="answer-pill">Correct</span> &nbsp;${ELEMENTS[z].n}: ${tg.join(', ')}`;
+      else status.innerHTML = `Placed ${totalPlaced()} of ${z}. Current: ${placed.slice(0, Math.max(1,placed.findLastIndex(v=>v>0)+1)).join(', ')||'0'}`;
+    }
+    c.addEventListener('click', (ev) => {
+      const p = canvasPos(c, ev);
+      const d = Math.hypot(p.x - 260, p.y - 180);
+      let shell = -1, best = 30;
+      radii.forEach((r,i) => { if (Math.abs(d-r) < best) { best = Math.abs(d-r); shell = i; } });
+      if (shell < 0) return;
+      if ((placed[shell]||0) < caps[shell] && totalPlaced() < z) { placed[shell] = (placed[shell]||0)+1; render(); }
+    });
+    currentTick = () => {
+      ctx.clearRect(0,0,c.width,c.height);
+      const mass = Math.round(ELEMENTS[z].m);
+      drawBohr(ctx, 260, 180, placed.map(v=>v), z, mass - z, performance.now());
+      // ghost target counts on each ring
+      ctx.font = '700 11px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      const tg = target();
+      for (let i=0;i<radii.length;i++){
+        const cap = caps[i];
+        ctx.fillStyle = 'rgba(124,111,90,0.55)';
+        ctx.fillText(`${placed[i]||0}/${cap}`, 260, 180 - radii[i] - 2);
+      }
+    };
+    stage.append(chips, status, reset, el('div',{class:'caption'},'Shell capacities: 2, 8, 8, 2 for the first 20 elements.'));
+    render();
+  }
+});
+
+// ---- Step 3: Quantized energy levels (ladder) ----
+scenes.push({
+  step: 'Step 3: Quantized Energy Levels',
+  seeLabel: 'Energy ladder',
+  heading: 'Step 3: Energy Comes in Steps',
+  notes: "Electrons sit in <strong>fixed energy levels</strong> and are never found between them, like rungs on a ladder. Absorbing a <strong>photon</strong> makes an electron jump up (<strong>excitation</strong>). Falling back down releases a photon of a specific color (<strong>emission</strong>).",
+  notebook: "Draw the energy ladder. Show one arrow up labeled <strong>absorb / excite</strong> and one arrow down labeled <strong>emit / release light</strong>.",
+  build(stage) {
+    const { c, ctx } = makeCanvas(stage, 520, 380);
+    let level = 1;        // current n (1..4)
+    let anim = null;      // {from,to,t,photonDir}
+    let photon = null;    // emitted photon traveling out
+    const levelY = n => 330 - (n-1) * 78 - (n>1 ? (n-1)*6 : 0);
+    function jump(to) {
+      if (anim) return;
+      const dir = to > level ? 'absorb' : 'emit';
+      anim = { from: level, to, t: 0, dir };
+    }
+    const up = el('button', { class:'primary' }, 'Absorb photon (jump up) ↑');
+    const down = el('button', {}, 'Emit photon (fall down) ↓');
+    up.addEventListener('click', () => { if (level < 4) jump(level+1); });
+    down.addEventListener('click', () => { if (level > 1) jump(level-1); });
+    const status = el('div', { class:'spectrum-readout' }, 'Electron is in energy level n = 1 (ground state).');
+    currentTick = (dt) => {
+      ctx.clearRect(0,0,c.width,c.height);
+      // rungs
+      for (let n=1;n<=4;n++){
+        const y = levelY(n);
+        ctx.strokeStyle = 'rgba(99,102,241,0.35)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(120,y); ctx.lineTo(430,y); ctx.stroke();
+        ctx.fillStyle = '#7C6F5A'; ctx.font='600 13px Inter, sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+        ctx.fillText('n = '+n, 110, y);
+        if (n===1){ ctx.fillStyle='#A0937B'; ctx.font='italic 11px Inter'; ctx.textAlign='left'; ctx.fillText('ground state', 360, y+16); }
+      }
+      let curY = levelY(level), curN = level;
+      if (anim) {
+        anim.t = Math.min(1, anim.t + dt/650);
+        const ease = anim.t<0.5 ? 2*anim.t*anim.t : 1-Math.pow(-2*anim.t+2,2)/2;
+        curY = levelY(anim.from) + (levelY(anim.to)-levelY(anim.from))*ease;
+        curN = anim.to;
+        if (anim.t >= 1) {
+          level = anim.to;
+          if (anim.dir === 'emit') {
+            const wl = [null, null, 650, 520, 440][anim.from] || 500; // bigger fall = bluer
+            photon = { x: 275, y: levelY(anim.to), wl: 700 - (anim.from-anim.to)*70 - anim.to*40, life: 1 };
+          }
+          anim = null;
+          status.innerHTML = `Electron is now in <strong>n = ${level}</strong>.`;
+        }
+      }
+      // incoming photon arrow during absorb
+      if (anim && anim.dir==='absorb') {
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth=3; ctx.beginPath();
+        ctx.moveTo(70, curY); ctx.lineTo(150, curY); ctx.stroke();
+        ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.moveTo(150,curY); ctx.lineTo(140,curY-6); ctx.lineTo(140,curY+6); ctx.fill();
+        ctx.fillStyle='#b45309'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='left'; ctx.fillText('photon in', 60, curY-12);
+      }
+      // emitted photon
+      if (photon) {
+        photon.x += dt*0.35; photon.life -= dt/1400;
+        const col = wavelengthToRGB(Math.max(410, Math.min(680, photon.wl)));
+        for (let k=0;k<5;k++){ ctx.strokeStyle=col; ctx.globalAlpha=photon.life*0.8; ctx.lineWidth=2.4;
+          ctx.beginPath(); const yy=photon.y + Math.sin((photon.x-260)/14 + k)*6;
+          ctx.moveTo(photon.x-k*14, yy); ctx.lineTo(photon.x-k*14-10, photon.y); ctx.stroke(); }
+        ctx.globalAlpha=1;
+        if (photon.life<=0) photon=null;
+      }
+      // electron
+      const ex=275, ey=curY;
+      const g=ctx.createRadialGradient(ex,ey,0,ex,ey,18); g.addColorStop(0,'rgba(129,140,248,0.7)'); g.addColorStop(1,'rgba(129,140,248,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(ex,ey,18,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(ex,ey,10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('e⁻', ex, ey);
+    };
+    stage.append(el('div',{class:'tool-row'},[up,down]), status, el('div',{class:'caption'},'A bigger fall releases higher-energy, bluer light.'));
+  }
+});
+
+// ---- Step 4: Emission spectrum / Balmer ----
+scenes.push({
+  step: 'Step 4: Emission Spectra (Balmer Series)',
+  seeLabel: 'Hydrogen spectrum simulator',
+  heading: 'Step 4: Emission Spectra',
+  notes: "When an excited electron falls to energy level <strong>n = 2</strong>, it releases <strong>visible light</strong>. These transitions are the <strong>Balmer series</strong>. A bigger fall releases bluer light; a smaller fall releases redder light.",
+  notebook: "Click all four Balmer jumps. Copy the spectrum that appears. Label which jump made the <strong>red</strong> line and which made the <strong>violet</strong> line.",
+  build(stage) {
+    const { c, ctx } = makeCanvas(stage, 560, 300);
+    const lines = { 3:656, 4:486, 5:434, 6:410 }; // nm
+    const shown = new Set();
+    let drop = null; // {from, t}
+    const readout = el('div', { class:'spectrum-readout' }, 'Click a transition to drop an electron to n = 2.');
+    function fire(from){ if(drop) return; drop = { from, t:0 }; }
+    const btns = [3,4,5,6].map(fr => el('button', { class:'chip',
+      onclick(){ fire(fr); } }, `n = ${fr} → 2`));
+    const levelY = n => 250 - (n-2) * 36;
+    currentTick = (dt) => {
+      ctx.clearRect(0,0,c.width,c.height);
+      // left: hydrogen levels n=2..6
+      for (let n=2;n<=6;n++){
+        const y=levelY(n);
+        ctx.strokeStyle = n===2 ? 'rgba(16,185,129,0.8)' : 'rgba(99,102,241,0.35)';
+        ctx.lineWidth = n===2?2.5:1.6;
+        ctx.beginPath(); ctx.moveTo(40,y); ctx.lineTo(180,y); ctx.stroke();
+        ctx.fillStyle='#7C6F5A'; ctx.font='600 11px Inter'; ctx.textAlign='right'; ctx.textBaseline='middle';
+        ctx.fillText('n='+n, 36, y);
+      }
+      ctx.fillStyle='#166534'; ctx.font='italic 10px Inter'; ctx.textAlign='left'; ctx.fillText('Balmer landing', 44, levelY(2)+14);
+      // electron drop
+      if (drop) {
+        drop.t = Math.min(1, drop.t + dt/700);
+        const y = levelY(drop.from) + (levelY(2)-levelY(drop.from))*drop.t;
+        ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(110,y,7,0,Math.PI*2); ctx.fill();
+        if (drop.t>=1){ shown.add(drop.from); const wl=lines[drop.from];
+          readout.innerHTML = `n=${drop.from} → 2 emits <strong style="color:${wavelengthToRGB(wl)}">${wl} nm</strong> (${wl>600?'red':wl>480?'blue-green':'violet'} light).`;
+          drop=null; }
+      }
+      // spectrum strip
+      const sx=220, sw=320, sy=60, sh=170;
+      ctx.fillStyle='#0a0a0a'; roundRect(ctx,sx,sy,sw,sh,8); ctx.fill();
+      ctx.fillStyle='#A0937B'; ctx.font='700 10px Roboto Mono'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+      ctx.fillText('400 nm', sx, sy-6); ctx.textAlign='right'; ctx.fillText('700 nm', sx+sw, sy-6);
+      const wlToX = wl => sx + (wl-400)/300 * sw;
+      shown.forEach(fr => {
+        const wl = lines[fr]; const x = wlToX(wl); const col = wavelengthToRGB(wl);
+        ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.shadowColor=col; ctx.shadowBlur=12;
+        ctx.beginPath(); ctx.moveTo(x,sy+8); ctx.lineTo(x,sy+sh-8); ctx.stroke(); ctx.shadowBlur=0;
+        ctx.fillStyle=col; ctx.font='700 9px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText(fr+'→2', x, sy+sh+3);
+      });
+      ctx.fillStyle='#57534E'; ctx.font='600 11px Inter'; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText('Hydrogen emission spectrum', sx+sw/2, sy+sh+18);
+    };
+    stage.append(el('div',{class:'tool-row'}, btns), readout,
+      el('div',{class:'caption'},'Each line is one allowed electron jump. Together they are hydrogen’s fingerprint.'));
+  }
+});
+
+// ---- Step 5: Flame tests ----
+scenes.push({
+  step: 'Step 5: Flame Tests',
+  seeLabel: 'Flame test bench',
+  heading: 'Step 5: Flame Tests',
+  notes: "In a flame test, heat <strong>excites electrons</strong>. As they fall back, each element emits photons of its own <strong>signature color</strong>. That is why every element burns a different color, and it is the same physics as the emission spectrum.",
+  notebook: "Test 3 elements. Write each element and its flame color. Explain in one sentence why <strong>copper</strong> and <strong>sodium</strong> look different.",
+  build(stage) {
+    const { c, ctx } = makeCanvas(stage, 520, 360);
+    const flames = {
+      Li: {col:'#dc2626', name:'crimson red', lines:[671]},
+      Na: {col:'#f59e0b', name:'yellow-orange', lines:[589]},
+      K:  {col:'#a855f7', name:'lilac', lines:[404,766]},
+      Ca: {col:'#f97316', name:'orange-red', lines:[622,553]},
+      Cu: {col:'#10b981', name:'blue-green', lines:[510,525]},
+      Sr: {col:'#ef4444', name:'scarlet red', lines:[650,605]},
+      Ba: {col:'#84cc16', name:'apple green', lines:[524,514]}
+    };
+    let active = 'Na';
+    const readout = el('div', { class:'spectrum-readout' });
+    const chips = el('div', { class:'tool-row' }, Object.keys(flames).map(k => el('button', {
+      class:'chip'+(k===active?' active':''), 'data-k':k,
+      onclick(){ active=k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', ch.dataset.k===k)); render(); }
+    }, k)));
+    function render(){
+      const f = flames[active];
+      readout.innerHTML = `<strong style="color:${f.col}">${ELEMENTS[Object.keys(ELEMENTS).find(z=>ELEMENTS[z].s===active)].n}</strong> burns <strong>${f.name}</strong>.`;
+    }
+    currentTick = (dt) => {
+      ctx.clearRect(0,0,c.width,c.height);
+      // dark bench so flame pops
+      ctx.fillStyle='#1C1917'; roundRect(ctx,0,0,c.width,c.height,12); ctx.fill();
+      const f = flames[active]; const t = performance.now();
+      // burner
+      ctx.fillStyle='#44403c'; roundRect(ctx,235,300,50,40,4); ctx.fill();
+      ctx.fillStyle='#292524'; roundRect(ctx,250,250,20,55,3); ctx.fill();
+      // flame (layered flicker)
+      const baseX=260, baseY=255;
+      for (let layer=0; layer<3; layer++){
+        const w = 46 - layer*12;
+        const h = 150 - layer*40;
+        const flick = Math.sin(t/120 + layer)*5;
+        const grad = ctx.createLinearGradient(baseX, baseY, baseX, baseY-h);
+        grad.addColorStop(0, layer===0 ? 'rgba(99,102,241,0.5)' : f.col);
+        grad.addColorStop(0.5, f.col);
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalAlpha = layer===2?0.95:0.6;
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(baseX-w/2, baseY);
+        ctx.quadraticCurveTo(baseX-w/2+flick, baseY-h*0.6, baseX+flick, baseY-h);
+        ctx.quadraticCurveTo(baseX+w/2-flick, baseY-h*0.6, baseX+w/2, baseY);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      // mini emission lines for this element
+      const sx=360, sy=70, sw=130, sh=150;
+      ctx.fillStyle='#000'; roundRect(ctx,sx,sy,sw,sh,6); ctx.fill();
+      f.lines.forEach(wl=>{ const x=sx+(Math.min(700,Math.max(400,wl))-400)/300*sw; const col=wavelengthToRGB(Math.min(700,Math.max(400,wl)));
+        ctx.strokeStyle=col; ctx.lineWidth=3; ctx.shadowColor=col; ctx.shadowBlur=8; ctx.beginPath(); ctx.moveTo(x,sy+6); ctx.lineTo(x,sy+sh-6); ctx.stroke(); ctx.shadowBlur=0; });
+      ctx.fillStyle='#A0937B'; ctx.font='700 9px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText('emission lines', sx+sw/2, sy+sh+6);
+      ctx.fillStyle='#fff'; ctx.font='700 22px Roboto Serif, serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+      ctx.fillText(active, 90, 70);
+      ctx.fillStyle=f.col; ctx.font='600 13px Inter'; ctx.fillText(f.name, 90, 92);
+    };
+    stage.append(chips, readout, el('div',{class:'caption'},'Heat excites electrons; the light they emit is the flame color.'));
+    render();
+  }
+});
+
+// ---- Step 6: Isotopes vs Ions ----
+scenes.push({
+  step: 'Step 6: Isotopes vs. Ions',
+  seeLabel: 'Isotope & ion explorer',
+  heading: 'Step 6: Isotopes vs. Ions',
+  notes: "<strong>Isotopes</strong> have the same number of protons but different numbers of <strong>neutrons</strong> (Carbon-12 vs Carbon-13). <strong>Ions</strong> form by gaining or losing <strong>electrons</strong>. <strong>Cations</strong> are positive (lost electrons); <strong>anions</strong> are negative (gained electrons).",
+  notebook: "Make one isotope and one ion in the tool. Write what changed in each: <strong>neutrons</strong> for the isotope, <strong>electrons</strong> for the ion.",
+  build(stage) {
+    const { c, ctx } = makeCanvas(stage, 540, 320);
+    // left atom = isotope of carbon, right atom = ion of sodium
+    let neutrons = 6;   // C: 6 (C-12) or 7 (C-13) or 8 (C-14)
+    let charge = 0;     // Na ion charge: -1,0,+1
+    const isoBtns = el('div',{class:'tool-row'}, [6,7,8].map(nv => el('button',{class:'chip'+(nv===neutrons?' active':''),'data-n':nv,
+      onclick(){ neutrons=nv; isoBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.n===nv)); render(); }}, `C-${6+nv}`)));
+    const ionBtns = el('div',{class:'tool-row'}, [['+1',1],['0',0],['−1',-1]].map(([lab,cv]) => el('button',{class:'chip'+(cv===charge?' active':''),'data-c':cv,
+      onclick(){ charge=cv; ionBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.c===cv)); render(); }}, `Na ${lab}`)));
+    const readout = el('div',{class:'spectrum-readout'});
+    function render(){
+      const cation = charge>0, anion = charge<0;
+      readout.innerHTML = `Left: <strong>Carbon-${6+neutrons}</strong> (6 protons, ${neutrons} neutrons) is an <strong>isotope</strong>. ` +
+        `Right: <strong>Na${charge>0?'⁺':charge<0?'⁻':''}</strong> ${charge===0?'is neutral':charge>0?'is a cation (lost 1 electron)':'is an anion (gained 1 electron)'}.`;
+    }
+    currentTick = () => {
+      ctx.clearRect(0,0,c.width,c.height);
+      const t = performance.now();
+      drawBohr(ctx, 145, 150, shellsFor(6), 6, neutrons, t);
+      drawBohr(ctx, 400, 150, shellsFor(11 - charge), 11, 12, t); // electrons = 11 - charge
+      ctx.fillStyle='#7C6F5A'; ctx.font='700 12px Roboto Mono'; ctx.textAlign='center';
+      ctx.fillText('ISOTOPE · neutrons change', 145, 300);
+      ctx.fillText('ION · electrons change', 400, 300);
+    };
+    stage.append(
+      el('div',{class:'eyebrow-sm',style:'text-align:center'},'Change the carbon isotope'), isoBtns,
+      el('div',{class:'eyebrow-sm',style:'text-align:center'},'Change the sodium ion'), ionBtns,
+      readout);
+    render();
+  }
+});
+
+// ---- Step 7: Particle counter ----
+scenes.push({
+  step: 'Step 7: Counting Particles in Ions',
+  seeLabel: 'Particle counter',
+  heading: 'Step 7: Protons, Neutrons, Electrons',
+  notes: "<strong>Protons</strong> come from the atomic number. <strong>Neutrons</strong> = mass number minus protons. For an ion, <strong>electrons</strong> = protons minus the charge: lose electrons for a +, gain electrons for a −.",
+  notebook: "Fill the table. For ³⁵Cl⁻ show your work: <strong>17 protons, 18 neutrons, 18 electrons</strong>. Then check yourself.",
+  build(stage) {
+    const rows = [
+      { label:'³⁵Cl⁻', z:17, mass:35, charge:-1 },
+      { label:'²³Na⁺', z:11, mass:23, charge:1 },
+      { label:'²⁴Mg²⁺', z:12, mass:24, charge:2 },
+      { label:'¹⁶O²⁻', z:8, mass:16, charge:-2 },
+      { label:'⁴⁰Ca²⁺', z:20, mass:40, charge:2 }
+    ];
+    const tbl = el('table', { class:'counter' });
+    tbl.append(el('tr',{},[el('th',{},'Ion'),el('th',{},'Protons'),el('th',{},'Neutrons'),el('th',{},'Electrons')]));
+    rows.forEach(r => {
+      const ans = { p:r.z, n:r.mass-r.z, e:r.z - r.charge };
+      const mk = key => { const i = el('input',{type:'number',inputmode:'numeric'});
+        i.addEventListener('input',()=>{ const v=i.value.trim(); if(v==='') {i.classList.remove('ok','no');return;} i.classList.toggle('ok',+v===ans[key]); i.classList.toggle('no',+v!==ans[key]); });
+        return i; };
+      tbl.append(el('tr',{},[el('td',{class:'sym',html:r.label}), el('td',{},mk('p')), el('td',{},mk('n')), el('td',{},mk('e'))]));
+    });
+    const revBtn = el('button',{class:'reveal-btn','data-show':'Show all answers','data-hide':'Hide answers'},'Show all answers');
+    const rev = el('div',{class:'reveal-content',hidden:''});
+    rev.innerHTML = rows.map(r => `<div><strong>${r.label.replace(/<[^>]+>/g,'')}</strong>: ${r.z} protons, ${r.mass-r.z} neutrons, ${r.z-r.charge} electrons</div>`).join('');
+    revBtn.addEventListener('click',()=>{ const h=rev.hasAttribute('hidden'); if(h){rev.removeAttribute('hidden');revBtn.textContent=revBtn.dataset.hide;} else {rev.setAttribute('hidden','');revBtn.textContent=revBtn.dataset.show;} });
+    stage.append(tbl, el('div',{style:'margin-top:12px;text-align:center'},[revBtn]), rev, el('div',{class:'caption',style:'margin-top:8px'},'Green means your number matches.'));
+  }
+});
+
+// ---- Step 8: Relative atomic mass calculator ----
+scenes.push({
+  step: 'Step 8: Relative Atomic Mass (Aᵣ)',
+  seeLabel: 'Aᵣ calculator',
+  heading: 'Step 8: Relative Atomic Mass',
+  notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, add the results, then divide by the total abundance (usually 1.00 or 100).",
+  notebook: "Run copper in the tool. Copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.6</strong>.",
+  build(stage) {
+    const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any'}); return el('div',{class:'field'},[el('label',{},lab),i]); };
+    const m1=mk('Isotope 1 mass',63), a1=mk('Abundance 1 (%)',69.2), m2=mk('Isotope 2 mass',65), a2=mk('Abundance 2 (%)',30.8);
+    const steps = el('div',{class:'calc-steps'});
+    const calc = () => {
+      const M1=+m1.querySelector('input').value, A1=+a1.querySelector('input').value, M2=+m2.querySelector('input').value, A2=+a2.querySelector('input').value;
+      const d1=A1/100, d2=A2/100, t1=M1*d1, t2=M2*d2, ar=t1+t2, tot=A1+A2;
+      steps.innerHTML =
+        `<div class="muted">Aᵣ = (mass × decimal abundance) summed</div>` +
+        `<div>(${M1} × ${d1.toFixed(3)}) + (${M2} × ${d2.toFixed(3)})</div>` +
+        `<div>= ${t1.toFixed(2)} + ${t2.toFixed(2)}</div>` +
+        `<div class="res">Aᵣ = ${ar.toFixed(2)}</div>` +
+        (Math.abs(tot-100)>0.5 ? `<div class="muted">note: abundances add to ${tot}%, should total 100%</div>` : '');
+    };
+    [m1,a1,m2,a2].forEach(f=>f.querySelector('input').addEventListener('input',calc));
+    const btn = el('button',{class:'primary',onclick:calc},'Calculate Aᵣ');
+    stage.append(
+      el('div',{class:'eyebrow-sm'},'Copper: ⁶³Cu and ⁶⁵Cu'),
+      el('div',{class:'iso-row'},[m1,a1]),
+      el('div',{class:'iso-row'},[m2,a2]),
+      btn, steps,
+      el('div',{class:'caption'},'Change the numbers to weigh any two isotopes.'));
+    calc();
+  }
+});
+
+// ---- Step 9: Solving for percent abundance (Lithium walkthrough) ----
+scenes.push({
+  step: 'Step 9: Solving for Percent Abundance',
+  seeLabel: 'Lithium walkthrough',
+  heading: 'Step 9: Find an Unknown Abundance',
+  notes: "When abundances are unknown, let one isotope be <strong>x</strong> and the other be <strong>1 − x</strong>. Plug both into the Aᵣ equation and solve for x. Then x and 1 − x are your two abundances.",
+  notebook: "Follow the lithium walkthrough. Copy every line. Box the final answer: about <strong>5.9% Li-6 and 94.1% Li-7</strong>.",
+  build(stage) {
+    const stepsData = [
+      { t:'The problem', c:'Lithium has two isotopes, Li-6 (mass 6) and Li-7 (mass 7). Its periodic-table mass is Aᵣ = 6.941. Find the abundance of each.' },
+      { t:'Set the unknowns', c:'Let x = fraction of Li-6. Then the fraction of Li-7 must be (1 − x), because they add to 1.00.' },
+      { t:'Write the Aᵣ equation', c:'6(x) + 7(1 − x) = 6.941' },
+      { t:'Expand', c:'6x + 7 − 7x = 6.941' },
+      { t:'Combine and solve', c:'−x + 7 = 6.941 → −x = −0.059 → x = 0.059' },
+      { t:'Answer', c:'x = 0.059 → 5.9% Li-6, and 1 − x = 0.941 → 94.1% Li-7.' }
+    ];
+    let shown = 0;
+    const list = el('div',{class:'calc-grid'});
+    const status = el('div',{class:'pb-text'});
+    const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
+    function renderStatus(){ const f=list.querySelector?list:null; status.textContent = shown<stepsData.length? `${shown} of ${stepsData.length} steps revealed` : `✓ All ${stepsData.length} steps revealed`;
+      status.classList.toggle('complete', shown>=stepsData.length); bar.querySelector('.pb-fill').style.width = (shown/stepsData.length*100)+'%'; }
+    function addStep(){ if(shown>=stepsData.length) return; const s=stepsData[shown];
+      const card = el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},(shown+1)+'.'), s.t]),
+        el('div',{class:'reveal-content',style:'border-left-color:var(--accentBlue)'}, s.c) ]);
+      list.append(card); shown++; renderStatus(); nextStepBtn.textContent = shown>=stepsData.length?'All steps shown':'Reveal next step'; nextStepBtn.disabled = shown>=stepsData.length; }
+    const nextStepBtn = el('button',{class:'primary',onclick:addStep},'Reveal next step');
+    stage.append(el('div',{class:'eyebrow-sm'},'Lithium: Aᵣ = 6.941'), nextStepBtn, list, el('div',{class:'pb-progress'},[bar,status]));
+    renderStatus();
+  }
+});
+
+// ---- Step 10: Summary & Check for Understanding ----
+scenes.push({
+  step: 'Step 10: Summary & Check for Understanding',
+  seeLabel: 'Summary',
+  heading: 'Step 10: Pull It Together',
+  notes: "<strong>Module 1:</strong> The Bohr model explains light through quantized electron jumps. <strong>Module 2:</strong> The periodic table shows average masses because elements are mixtures of isotopes.",
+  notebook: "Answer each question first, then reveal the solution and check your work. Fix anything you missed.",
+  build(stage) {
+    const summaries = [
+      { tag:'Module 1 Summary', text:'Electrons jump between fixed energy levels. The photons they emit give each element its own spectrum and flame color.' },
+      { tag:'Module 2 Summary', text:'The periodic table lists average masses because every element is a mixture of isotopes, weighted by how common each one is.' }
+    ];
+    summaries.forEach(s => stage.append(el('div',{class:'summary-card'},[el('div',{class:'sc-tag'},s.tag), el('p',{},s.text)])));
+    const qs = [
+      { q:'An electron moves from n = 4 to n = 2. Is energy absorbed or emitted?', a:'<strong>Emitted.</strong> It moves to a lower energy level, so it releases a photon.' },
+      { q:'Find the Aᵣ of an element that is 75% mass 35 and 25% mass 37.', a:'(35 × 0.75) + (37 × 0.25) = 26.25 + 9.25 = <strong>35.5</strong>.' },
+      { q:'Describe the Bohr model for ²⁴Mg²⁺.', a:'12 protons, 12 neutrons, but only <strong>10 electrons</strong> (it lost 2 to become 2+), so the configuration is <strong>2, 8</strong>.' }
+    ];
+    let done = 0;
+    const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
+    const text = el('div',{class:'pb-text'}, `0 of ${qs.length} checked`);
+    qs.forEach((item,i) => {
+      const btn = el('button',{class:'reveal-btn'},'Click for solution');
+      const rev = el('div',{class:'reveal-content',hidden:'',html:item.a});
+      btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown'; btn.disabled=true;
+        done++; bar.querySelector('.pb-fill').style.width=(done/qs.length*100)+'%';
+        text.textContent = done===qs.length?`✓ All ${qs.length} checked`:`${done} of ${qs.length} checked`;
+        text.classList.toggle('complete', done===qs.length); });
+      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},'Q'+(i+1)), item.q]), btn, rev ]));
+    });
+    stage.append(el('div',{class:'pb-progress'},[bar,text]));
+  }
+});
+
+// =====================================================
+//  Nav controller
+// =====================================================
+const stageEl = $('#stage');
+const stageLabel = $('#stageLabel');
+const stepHeadingEl = $('#stepHeading');
+const notesEl = $('#notes');
+const notebookTextEl = $('#notebookText');
+const stepIndicator = $('#stepIndicator');
+const progressFill = $('#progressFill');
+const prevBtn = $('#prevBtn');
+const nextBtn = $('#nextBtn');
+const resetBtn = $('#resetBtn');
+let current = 0;
+const pad2 = n => n < 10 ? '0'+n : ''+n;
+
+function setScene(i) {
+  current = i;
+  currentTick = null;
+  const s = scenes[i];
+  stageEl.innerHTML = '';
+  stageLabel.textContent = s.seeLabel || 'What you see';
+  stepHeadingEl.textContent = s.heading;
+  notesEl.innerHTML = s.notes;
+  notebookTextEl.innerHTML = s.notebook;
+  stepIndicator.textContent = `${pad2(i+1)} / ${pad2(scenes.length)}`;
+  progressFill.style.width = ((i+1)/scenes.length*100) + '%';
+  prevBtn.disabled = i === 0;
+  nextBtn.disabled = i === scenes.length-1;
+  nextBtn.textContent = i === scenes.length-1 ? 'Done' : 'Next →';
+  s.build(stageEl);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+prevBtn.addEventListener('click', () => { if (current>0) setScene(current-1); });
+nextBtn.addEventListener('click', () => { if (current<scenes.length-1) setScene(current+1); });
+resetBtn.addEventListener('click', () => setScene(0));
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' && current<scenes.length-1) setScene(current+1);
+  if (e.key === 'ArrowLeft' && current>0) setScene(current-1);
+});
+
+setScene(0);
+</script>
+</body>
+</html>
