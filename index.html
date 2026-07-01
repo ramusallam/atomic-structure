@@ -164,6 +164,7 @@
     animation: fadeUp 0.4s ease-out;
   }
   .notes-card .nc-tag {
+    display: inline-flex; align-items: center; gap: 6px;
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
@@ -198,6 +199,7 @@
   }
   .notebook-prompt .np-tag {
     flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 5px;
     font-family: var(--font-mono);
     font-size: 9px;
     font-weight: 700;
@@ -286,8 +288,8 @@
   .diff-pill {
     display: inline-block; font-family: var(--font-mono); font-size: 9px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
-    margin: 0 6px; vertical-align: middle;
   }
+  .q-card .q-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
   .diff-simple { color: #166534; background: rgba(16,185,129,0.14); }
   .diff-challenge { color: #9a3412; background: rgba(245,158,11,0.16); }
 
@@ -387,6 +389,7 @@
   .hint { font-size: 12px; color: var(--textWarmMuted); text-align: center; font-style: italic; }
   .caption { font-style: italic; font-size: 12px; color: var(--textWarmMuted); text-align: center; }
   .spectrum-readout { font-family: var(--font-mono); font-size: 13px; text-align: center; color: var(--textSecondary); min-height: 18px; }
+  .status-line { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--textPrimary); text-align: center; line-height: 1.45; min-height: 22px; }
 
   @media (max-width: 980px) {
     .workspace { grid-template-columns: 1fr; }
@@ -418,12 +421,12 @@
 
     <div class="side">
       <div class="notes-card">
-        <div class="nc-tag">📝 Copy Into Your Notes</div>
+        <div class="nc-tag"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Copy Into Your Notes</div>
         <div class="step-heading" id="stepHeading"></div>
         <p id="notes"></p>
       </div>
       <div class="notebook-prompt">
-        <div class="np-tag">✎ DO</div>
+        <div class="np-tag"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>DO</div>
         <div id="notebookText"></div>
       </div>
       <nav>
@@ -509,6 +512,8 @@ function wavelengthToRGB(wl) {
   const ch = v => Math.round(255 * Math.pow(Math.max(0, Math.min(1, v)) * f, 0.8));
   return `rgb(${ch(r)},${ch(g)},${ch(b)})`;
 }
+// one shared wavelength -> color name so every step agrees
+const colorName = wl => wl<430?'violet':wl<480?'blue':wl<510?'blue-green':wl<565?'green':wl<590?'yellow':wl<625?'orange':'red';
 
 // =====================================================
 //  Animation loop (current scene may register a tick)
@@ -631,9 +636,6 @@ class ElectronCloud {
   }
 }
 
-// superscript helper for symbols like  35-Cl-minus
-function sup(s){ return `<span style="font-size:0.72em;vertical-align:0.5em">${s}</span>`; }
-function sub(s){ return `<span style="font-size:0.72em;vertical-align:-0.3em">${s}</span>`; }
 
 // =====================================================
 //  SCENES
@@ -760,7 +762,7 @@ scenes.push({
   seeLabel: 'Element identity tool',
   heading: 'Step 2: Atomic Number = Identity',
   notes: "The <strong>atomic number</strong> is the number of <strong>protons</strong>. It is the element's fingerprint: any atom with 6 protons must be carbon. The <strong>mass number</strong> is the number of <strong>protons plus neutrons</strong> in the nucleus.",
-  notebook: "Use the tool. Pick <strong>3 atomic numbers</strong>, write each element's name and its nuclear symbol. Circle the protons.",
+  notebook: "Before you drag, <strong>predict</strong>: going from atomic number 6 to 7, which number (protons, neutrons, or mass) <strong>must</strong> change to make a new element? Drag it and check. Then pick <strong>3 atomic numbers</strong> (try your lab metals below), write each element's name and nuclear symbol, and circle the protons.",
   build(stage) {
     let z = 6;
     const symWrap = el('div', { class: 'nuclear-symbol' });
@@ -785,9 +787,13 @@ scenes.push({
     slider.addEventListener('input', () => { z = +slider.value; render(); });
     minus.addEventListener('click', () => { z = Math.max(1, z-1); slider.value = z; render(); });
     plus.addEventListener('click', () => { z = Math.min(20, z+1); slider.value = z; render(); });
+    const labZ = [11,19,20,29,38,56];
+    const labChips = el('div', { class:'tool-row', style:'margin-top:4px' }, labZ.map(a => el('button', { type:'button', class:'chip', onclick(){ z=a; slider.value=Math.min(20,a); render(); } }, ELEMENTS[a].s)));
     stage.append(el('div', { class:'lookup' }, [
       el('div', { class:'eyebrow-sm' }, 'Drag to change the atomic number'),
       symWrap, name, grid, sliderRow,
+      el('div', { class:'eyebrow-sm', style:'margin-top:2px' }, 'Or jump to a lab metal'),
+      labChips,
       el('div', { class:'caption' }, 'Mass number (top) and atomic number (bottom) form the nuclear symbol.')
     ]));
     render();
@@ -809,7 +815,7 @@ scenes.push({
     const CX = 260, CY = 166;
     const { c, ctx } = makeCanvas(stage, 520, 326);
     const cloud = new ElectronCloud(CX, CY);
-    const status = el('div', { class:'spectrum-readout' });
+    const status = el('div', { class:'status-line' });
     const valEl = el('div', { class:'spectrum-readout', style:'font-weight:700;color:var(--accentPurple)' });
     const chips = el('div', { class:'tool-row' }, atoms.map(a => el('button', {
       type:'button', class: 'chip' + (a===z?' active':''), 'data-z':a,
@@ -889,10 +895,10 @@ scenes.push({
   notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder; now watch them fall. The rungs are <strong>fixed energy levels</strong> with unequal gaps. The <strong>farther</strong> an electron falls, the <strong>more energy</strong> the light carries: its <strong>wavelength gets shorter</strong> and its <strong>frequency gets higher</strong>, sliding the color from <strong>red toward violet (ROYGBIV)</strong>. A small fall gives long-wavelength, low-frequency <strong>red</strong>; a big fall gives short-wavelength, high-frequency <strong>violet</strong>.",
   notebook: "Do a <strong>small</strong> fall and a <strong>big</strong> fall. For each, record the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>. Then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
   build(stage) {
-    const { c, ctx } = makeCanvas(stage, 520, 330);
+    const { c, ctx } = makeCanvas(stage, 520, 296);
     const NMAX = 5;
     // hand-tuned unequal spacing: big gap low down, gaps shrink upward but never crowd
-    const LY = { 1:296, 2:186, 3:116, 4:72, 5:42 };
+    const LY = { 1:262, 2:164, 3:100, 4:60, 5:34 };
     const yOf = n => LY[n];
     let level = 1, anim = null, lastWL = null, prevWL = null, wavePhase = 0;
     const EX = 150;
@@ -902,13 +908,14 @@ scenes.push({
       const norm = Math.max(0, Math.min(1, (dE - 0.02)/(0.96 - 0.02)));
       return Math.round(680 - norm*270); // 410 violet .. 680 red
     };
-    const colorName = wl => wl<430?'violet':wl<480?'blue':wl<510?'blue-green':wl<565?'green':wl<590?'yellow':wl<625?'orange':'red';
     const up = el('button', { class:'primary' }, 'Absorb (jump up) ↑');
-    const down = el('button', {}, 'Emit (fall down) ↓');
+    const dn1 = el('button', {}, 'Emit: small fall (down 1) ↓');
+    const dnAll = el('button', {}, 'Emit: big fall (to n=1) ↓');
     function start(to, dir){ if(anim) return; anim = { from: level, to, t:0, dir, wl: dir==='emit'?dropWL(level,to):null }; }
     up.addEventListener('click', () => { if(level<NMAX && !anim) start(level+1,'absorb'); });
-    down.addEventListener('click', () => { if(level>1 && !anim){ const to = 1 + Math.floor(Math.random()*(level-1)); start(to,'emit'); } });
-    const status = el('div', { class:'spectrum-readout', style:'min-height:18px' }, 'Absorb a photon to climb, then Emit and watch the light.');
+    dn1.addEventListener('click', () => { if(level>1 && !anim) start(level-1,'emit'); });
+    dnAll.addEventListener('click', () => { if(level>1 && !anim) start(1,'emit'); });
+    const status = el('div', { class:'status-line', style:'min-height:18px' }, 'Absorb a photon to climb, then Emit and watch the light.');
     // ROYGBIV reference bar with a live marker
     const marker = el('div',{style:'position:absolute;top:-3px;width:3px;height:22px;background:#1c1917;box-shadow:0 0 0 2px #fff;border-radius:2px;left:0%;transition:left 220ms ease'});
     const bar = el('div',{style:'position:relative;height:16px;border-radius:8px;background:linear-gradient(to right,#ff2d2d,#ff8a00,#ffe000,#39d353,#2ec5ff,#6a5cff,#b14bff)'},[marker]);
@@ -946,7 +953,7 @@ scenes.push({
             const dist = anim.from - anim.to, f = (3000/anim.wl).toFixed(1), col2 = wavelengthToRGB(anim.wl);
             const wlA = prevWL==null?'':(anim.wl<prevWL?' <span style="color:#166534">↓ shorter</span>':anim.wl>prevWL?' <span style="color:#9a3412">↑ longer</span>':' = same');
             const fA  = prevWL==null?'':(anim.wl<prevWL?' <span style="color:#166534">↑ higher</span>':anim.wl>prevWL?' <span style="color:#9a3412">↓ lower</span>':' = same');
-            status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10¹⁴ Hz</strong>${fA} · <strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
+            status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10<span style="font-size:0.72em;vertical-align:0.4em">14</span> Hz</strong>${fA} ·<strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
             marker.style.left = Math.max(0,Math.min(100,(700-anim.wl)/300*100)) + '%';
           } else {
             status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung, more energy stored — ready to fall.`;
@@ -983,7 +990,7 @@ scenes.push({
       ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(ex,ey,10,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#fff'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('e⁻', ex, ey);
     };
-    stage.append(el('div',{class:'tool-row'},[up,down]), status, specWrap, inquiry);
+    stage.append(el('div',{class:'tool-row'},[up,dn1,dnAll]), status, specWrap, inquiry);
   }
 });
 
@@ -993,13 +1000,13 @@ scenes.push({
   seeLabel: 'Hydrogen spectrum simulator',
   heading: 'Step 5: Emission Spectra',
   notes: "When an excited electron falls to energy level <strong>n = 2</strong>, it releases <strong>visible light</strong>. These transitions are the <strong>Balmer series</strong>. A bigger fall releases bluer light; a smaller fall releases redder light.",
-  notebook: "Click all four Balmer jumps. Copy the spectrum that appears. Label which jump made the <strong>red</strong> line and which made the <strong>violet</strong> line.",
+  notebook: "Before clicking, <strong>predict</strong>: of the four jumps (n = 3, 4, 5, 6 → 2), which lands the <strong>reddest</strong> line and which the most <strong>violet</strong>? Click all four to check, copy the spectrum, and label the red and violet lines.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 560, 300);
     const lines = { 3:656, 4:486, 5:434, 6:410 }; // nm
     const shown = new Set();
     let drop = null; // {from, t}
-    const readout = el('div', { class:'spectrum-readout' }, 'Click a transition to drop an electron to n = 2.');
+    const readout = el('div', { class:'status-line' }, 'Click a transition to drop an electron to n = 2.');
     function fire(from){ if(drop) return; drop = { from, t:0 }; }
     const btns = [3,4,5,6].map(fr => el('button', { class:'chip',
       onclick(){ fire(fr); } }, `n = ${fr} → 2`));
@@ -1022,7 +1029,7 @@ scenes.push({
         const y = levelY(drop.from) + (levelY(2)-levelY(drop.from))*drop.t;
         ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(110,y,7,0,Math.PI*2); ctx.fill();
         if (drop.t>=1){ shown.add(drop.from); const wl=lines[drop.from];
-          readout.innerHTML = `n=${drop.from} → 2 emits <strong style="color:${wavelengthToRGB(wl)}">${wl} nm</strong> (${wl>600?'red':wl>480?'blue-green':'violet'} light).`;
+          readout.innerHTML = `n=${drop.from} → 2 emits <strong style="color:${wavelengthToRGB(wl)}">${wl} nm</strong> (${colorName(wl)} light).`;
           drop=null; }
       }
       // spectrum strip
@@ -1052,7 +1059,7 @@ scenes.push({
   seeLabel: 'Flame test bench',
   heading: 'Step 6: Flame Tests',
   notes: "Same physics as the emission spectrum, now across many elements: when heated, each element's electrons emit photons of its own <strong>signature color</strong>. That color is what identifies an <strong>unknown</strong> ion in the lab.",
-  notebook: "Test 3 elements. Write each element and its flame color. Explain in one sentence why <strong>copper</strong> and <strong>sodium</strong> look different.",
+  notebook: "Test 3 elements. Write each element and its flame color, and one sentence on why <strong>copper</strong> and <strong>sodium</strong> look different. Then look back at your lab: <strong>match your unknown's color to a bench element above, name your unknown</strong>, and say in one sentence why that electron fall makes that color.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 360);
     const flames = {
@@ -1065,7 +1072,7 @@ scenes.push({
       Ba: {col:'#84cc16', name:'apple green', lines:[524,514]}
     };
     let active = 'Na';
-    const readout = el('div', { class:'spectrum-readout' });
+    const readout = el('div', { class:'status-line' });
     const chips = el('div', { class:'tool-row' }, Object.keys(flames).map(k => el('button', {
       class:'chip'+(k===active?' active':''), 'data-k':k,
       onclick(){ active=k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', ch.dataset.k===k)); render(); }
@@ -1112,7 +1119,7 @@ scenes.push({
       ctx.fillText(active, 90, 70);
       ctx.fillStyle=f.col; ctx.font='600 13px Inter'; ctx.fillText(f.name, 90, 92);
     };
-    stage.append(chips, readout, el('div',{class:'caption'},'Heat excites electrons; the light they emit is the flame color.'));
+    stage.append(chips, readout, el('div',{class:'caption'},'Heat excites electrons; the light they emit is the flame color. The color your unknown burned is the one that names it.'));
     render();
   }
 });
@@ -1139,10 +1146,10 @@ scenes.push({
     const readout = el('div',{style:'font-family:var(--font-sans);font-size:14px;font-weight:600;color:var(--textPrimary);text-align:center;line-height:1.55'});
     function render(){
       const ionDesc = charge===0?'neutral atom':charge>0?'cation, lost 1 electron':'anion, gained 1 electron';
-      const sym = charge>0?'⁺':charge<0?'⁻':'';
+      const sym = charge===0 ? '' : `<sup style="font-size:0.68em;font-weight:700;color:#b45309">${charge>0?'+':'−'}</sup>`;
       readout.innerHTML =
         `<div><strong style="color:var(--accentBlue)">Isotope</strong> · Carbon-${6+neutrons}: 6 protons, ${neutrons} neutrons</div>` +
-        `<div><strong style="color:var(--accentPurple)">Ion</strong> · Na${sym}: ${ionDesc}</div>`;
+        `<div><strong style="color:#b45309">Ion</strong> · Na${sym}: ${ionDesc}</div>`;
     }
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
@@ -1204,7 +1211,7 @@ scenes.push({
   seeLabel: 'Aᵣ calculator',
   heading: 'Step 9: Relative Atomic Mass',
   notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, add the results, then divide by the total abundance (usually 1.00 or 100).",
-  notebook: "Run copper in the tool. Copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.",
+  notebook: "Before you calculate, <strong>predict</strong>: copper is ~69% mass-63 and ~31% mass-65, so will its average mass sit closer to 63 or to 65? Run it and check, then copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.",
   build(stage) {
     const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any'}); return el('div',{class:'field'},[el('label',{},lab),i]); };
     const m1=mk('Isotope 1 mass',63), a1=mk('Abundance 1 (%)',69.2), m2=mk('Isotope 2 mass',65), a2=mk('Abundance 2 (%)',30.8);
@@ -1251,7 +1258,7 @@ scenes.push({
     const list = el('div',{class:'calc-grid'});
     const status = el('div',{class:'pb-text'});
     const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
-    function renderStatus(){ status.textContent = shown<stepsData.length? `${shown} of ${stepsData.length} steps revealed` : `✓ All ${stepsData.length} steps revealed`;
+    function renderStatus(){ status.textContent = shown<stepsData.length? `${shown} of ${stepsData.length} steps revealed` : `All ${stepsData.length} steps revealed`;
       status.classList.toggle('complete', shown>=stepsData.length); bar.querySelector('.pb-fill').style.width = (shown/stepsData.length*100)+'%'; }
     function addStep(){ if(shown>=stepsData.length) return; const s=stepsData[shown];
       const card = el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},(shown+1)+'.'), s.t]),
@@ -1284,9 +1291,9 @@ scenes.push({
         a:'Mass number = protons + neutrons = 17 + 18 = <strong>35</strong>.' },
       { d:'Challenge', q:'Carbon-12 and Carbon-14 are isotopes. What is the same, what is different, and which atom is heavier? Why?',
         a:'Same number of <strong>protons</strong> (6) and electrons, so both are carbon. Different number of <strong>neutrons</strong> (6 vs 8). <strong>Carbon-14 is heavier</strong> because mass number = protons + neutrons, and it has two more neutrons.' },
-      { d:'Simple', q:'How many electrons are in ²³Na⁺?',
+      { d:'Simple', q:'How many electrons are in <sup>23</sup>Na<sup>+</sup>?',
         a:'Sodium has 11 protons. A 1+ charge means it <strong>lost one electron</strong>, so 11 − 1 = <strong>10 electrons</strong>.' },
-      { d:'Challenge', q:'Find the protons, neutrons, and electrons in ¹⁶O²⁻.',
+      { d:'Challenge', q:'Find the protons, neutrons, and electrons in <sup>16</sup>O<sup>2−</sup>.',
         a:'<strong>8 protons</strong> (oxygen). Neutrons = 16 − 8 = <strong>8</strong>. The 2− charge means it <strong>gained 2 electrons</strong>, so 8 + 2 = <strong>10 electrons</strong>.' },
       { d:'Simple', q:'Worked — relative average. Chlorine is 75% mass-35 and 25% mass-37. Find its relative atomic mass (Aᵣ).',
         a:'Multiply each mass by its decimal abundance, then add:<br>(35 × 0.75) + (37 × 0.25)<br>= 26.25 + 9.25<br>= <strong>Aᵣ = 35.5</strong>.' },
@@ -1302,28 +1309,26 @@ scenes.push({
       const rev = el('div',{class:'reveal-content',hidden:'',html:item.a});
       btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown — copy it down'; btn.disabled=true;
         done++; bar.querySelector('.pb-fill').style.width=(done/qs.length*100)+'%';
-        text.textContent = done===qs.length?`✓ All ${qs.length} checked`:`${done} of ${qs.length} checked`;
+        text.textContent = done===qs.length?`All ${qs.length} checked`:`${done} of ${qs.length} checked`;
         text.classList.toggle('complete', done===qs.length); });
-      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},(i+1)+'.'), pill, item.q]), btn, rev ]));
+      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-head'},[el('span',{class:'q-num'},(i+1)+'.'), pill]), el('div',{class:'q-text'}, item.q), btn, rev ]));
     });
     stage.append(el('div',{class:'pb-progress'},[bar,text]));
   }
 });
 
-// Paste your deployed Google Apps Script Web App URL (ends in /exec) here to collect student questions:
-const QUESTIONS_ENDPOINT = 'PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';
-
-// ---- Step 12: Your Questions (launch the next lesson) ----
+// ---- Step 12: Your Questions (live class feed + word cloud) ----
 scenes.push({
   step: 'Step 12: Your Questions',
   seeLabel: 'Your questions',
   heading: 'Step 12: What Are You Wondering?',
-  notes: "You have seen how protons and neutrons sit in the nucleus, how electrons fill shells, and how jumping electrons make the colors you saw in the flame test. Now turn it around. <strong>What are you still wondering?</strong> The best questions are the ones the simulation could not fully answer.",
-  notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here, add your <strong>name and class</strong>, and hit <strong>Submit</strong> so I get them before our next lesson. There are no wrong questions.",
+  notes: "You have seen how protons and neutrons sit in the nucleus, how electrons fill shells, and how jumping electrons make the colors from the flame test. Now turn it around. <strong>What are you still wondering?</strong> Your questions launch our next lesson.",
+  notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here with your <strong>name and class</strong> and hit <strong>Submit</strong> — watch the class's questions and the word cloud build below.",
   build(stage) {
+    const APP = 'Atomic Structure';
     stage.append(el('div',{class:'summary-card',style:'border-left-color:var(--accentBlue)'},[
       el('div',{class:'sc-tag',style:'color:var(--accentBlue)'},'Launch the next lesson'),
-      el('p',{},'Write your questions in your notebook, then type them here and hit Submit. I read every one before we start next class.')
+      el('p',{},'Keep your questions in your notebook, then submit them here. They appear below for the whole class, and the word cloud shows what we are all wondering.')
     ]));
     const inS = 'font-family:var(--font-sans);font-size:14px;padding:9px 12px;border:1px solid var(--borderColor);border-radius:9px;background:#fff;color:var(--textPrimary)';
     const name = el('input',{type:'text',placeholder:'Your name',style:inS+';flex:2;min-width:0'});
@@ -1331,31 +1336,57 @@ scenes.push({
     stage.append(el('div',{style:'display:flex;gap:8px;margin-top:4px'},[name,klass]));
     const inputs = [];
     const wrap = el('div',{style:'display:flex;flex-direction:column;gap:8px;margin-top:8px'});
-    for (let i=0;i<5;i++){
-      const inp = el('input',{type:'text',placeholder:'I wonder...',style:inS+';flex:1;min-width:0'});
-      inputs.push(inp);
-      wrap.append(el('div',{style:'display:flex;align-items:center;gap:10px'},[ el('div',{class:'q-num',style:'min-width:20px'}, (i+1)+'.'), inp ]));
-    }
+    for (let i=0;i<5;i++){ const inp = el('input',{type:'text',placeholder:'I wonder...',style:inS+';flex:1;min-width:0'}); inputs.push(inp);
+      wrap.append(el('div',{style:'display:flex;align-items:center;gap:10px'},[ el('div',{class:'q-num',style:'min-width:20px'},(i+1)+'.'), inp ])); }
     stage.append(wrap);
     const btn = el('button',{class:'primary',style:'margin-top:2px'},'Submit my questions');
     const msg = el('div',{class:'pb-text'});
+    stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[btn, msg]));
+
+    // live class feed + word cloud
+    const feed = el('div',{style:'flex:1;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:#fff'});
+    const cloud = el('div',{style:'flex:1;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:var(--bgMain);padding:10px;text-align:center;align-content:center'});
+    stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'What the class is wondering'));
+    stage.append(el('div',{style:'display:flex;gap:12px;margin-top:6px'},[feed, cloud]));
+
+    const STOP = new Set('the a an is are do does of to in on and or why what how when it they that this for with as be can will if so i we you my me their there not have has was were which at by from more than into out up down one two all some about us our your his her also it’s'.split(' '));
+    function paint(items){
+      // feed
+      feed.innerHTML='';
+      const qlist=[]; (items||[]).forEach(it => (it.questions||[]).forEach(q => { if(q) qlist.push({q, who:(it.name||'—'), kl:(it.klass||'')}); }));
+      if(!qlist.length){ feed.innerHTML='<div class="caption" style="padding:16px">Be the first — submit a question.</div>'; }
+      else qlist.forEach(r => feed.append(el('div',{style:'padding:8px 11px;border-bottom:1px solid var(--borderSubtle)'},[
+        el('div',{style:'font-size:13.5px;color:var(--textPrimary);line-height:1.4'}, r.q),
+        el('div',{style:'font-family:var(--font-mono);font-size:10px;color:var(--textWarmMuted);margin-top:2px'}, r.who + (r.kl?(' · '+r.kl):'')) ])));
+      // word cloud
+      const freq={}; (items||[]).forEach(it => (it.questions||[]).forEach(q => (q||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).forEach(w => { if(w.length>2 && !STOP.has(w)) freq[w]=(freq[w]||0)+1; })));
+      const words=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,36);
+      cloud.innerHTML='';
+      if(!words.length){ cloud.innerHTML='<div class="caption">Common words appear here as the class submits.</div>'; }
+      else { const max=words[0][1], pal=['#6366f1','#a855f7','#7c3aed','#4f46e5','#8b5cf6'];
+        words.forEach(([w,n],i)=> cloud.append(el('span',{style:`display:inline-block;margin:3px 7px;font-family:var(--font-sans);font-weight:700;line-height:1.05;font-size:${13+Math.round((n/max)*22)}px;color:${pal[i%pal.length]};opacity:${(0.55+0.45*(n/max)).toFixed(2)}`}, w))); }
+    }
+    paint([]);
+    function wireLive(){ if(window._qUnsub){ try{window._qUnsub();}catch(e){} window._qUnsub=null; } if(window.ClassQ){ window._qUnsub = window.ClassQ.subscribe(APP, paint); } }
+    if(window.ClassQ) wireLive(); else window.addEventListener('classq-ready', wireLive, {once:true});
+
+    const BAD=/\b(fuck|shit|bitch|damn|crap|ass|dick|piss)\b/i;
     btn.addEventListener('click', async () => {
       const qs = inputs.map(i=>i.value.trim()).filter(Boolean);
       if(!name.value.trim() || !klass.value.trim()){ msg.textContent='Add your name and class first.'; msg.classList.remove('complete'); return; }
       if(!qs.length){ msg.textContent='Type at least one question first.'; msg.classList.remove('complete'); return; }
+      if(qs.some(q=>BAD.test(q))){ msg.textContent='Keep it school-appropriate, please.'; msg.classList.remove('complete'); return; }
       btn.disabled=true; btn.textContent='Submitting...'; msg.textContent='';
-      const payload = { app:'Atomic Structure', name:name.value.trim(), klass:klass.value.trim(), questions:qs, ts:new Date().toISOString() };
       try {
-        if(QUESTIONS_ENDPOINT.indexOf('PASTE_')>=0) throw new Error('not-configured');
-        await fetch(QUESTIONS_ENDPOINT, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
-        btn.textContent='✓ Submitted'; msg.textContent='Thanks! Your questions are in — keep your copy in your notebook.'; msg.classList.add('complete');
+        if(!window.ClassQ) throw new Error('offline');
+        await window.ClassQ.submit({ app:APP, name:name.value.trim(), klass:klass.value.trim(), questions:qs });
+        btn.textContent='Submitted'; msg.textContent = (window.ClassQ.mode==='live') ? 'Thanks! Added below for the class.' : 'Added below (demo mode on this device).'; msg.classList.add('complete');
+        inputs.forEach(i=>i.value='');
       } catch(err){
         btn.disabled=false; btn.textContent='Submit my questions';
-        msg.textContent = err.message==='not-configured' ? 'Submissions are not connected yet — tell your teacher.' : 'Could not submit — check your connection and try again.';
-        msg.classList.remove('complete');
+        msg.textContent='Could not submit — try again.'; msg.classList.remove('complete');
       }
     });
-    stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[btn, msg]));
   }
 });
 
@@ -1391,6 +1422,7 @@ const pad2 = n => n < 10 ? '0'+n : ''+n;
 function setScene(i) {
   current = i;
   currentTick = null;
+  if (window._qUnsub) { try { window._qUnsub(); } catch(e){} window._qUnsub = null; }
   const s = scenes[i];
   stageEl.innerHTML = '';
   const shortTitle = s.heading.replace(/^Step \d+:\s*/, '');
@@ -1418,6 +1450,47 @@ document.addEventListener('keydown', e => {
 });
 
 setScene(0);
+</script>
+<script type="module">
+/* ===== Class Questions collector =====
+   Paste your Firebase web config below to turn on the SHARED, live, persistent class feed
+   (one Firebase project can collect every app — rows are tagged by `app`).
+   Leave the PASTE_ values to run in local DEMO mode (this browser only) so the UI still works. */
+const firebaseConfig = {
+  apiKey: "PASTE_FIREBASE_apiKey",
+  authDomain: "PASTE_FIREBASE_authDomain",
+  projectId: "PASTE_FIREBASE_projectId",
+  appId: "PASTE_FIREBASE_appId"
+};
+const configured = !JSON.stringify(firebaseConfig).includes('PASTE_');
+const listeners = {}, key = a => 'classq:' + a;
+const readLocal = a => { try { return JSON.parse(localStorage.getItem(key(a)) || '[]'); } catch(e){ return []; } };
+const notifyLocal = a => (listeners[a]||[]).forEach(cb => cb(readLocal(a)));
+function setLocal(){
+  window.ClassQ = {
+    mode: 'demo',
+    async submit(p){ const r={app:p.app,name:p.name||'',klass:p.klass||'',questions:p.questions||[],created:Date.now()}; const arr=readLocal(r.app); arr.unshift(r); localStorage.setItem(key(r.app), JSON.stringify(arr.slice(0,300))); notifyLocal(r.app); },
+    subscribe(a,cb){ (listeners[a]=listeners[a]||[]).push(cb); cb(readLocal(a)); return ()=>{ listeners[a]=(listeners[a]||[]).filter(x=>x!==cb); }; }
+  };
+}
+async function init(){
+  if (!configured) { setLocal(); }
+  else {
+    try {
+      const appMod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      const fs = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const db = fs.getFirestore(appMod.initializeApp(firebaseConfig));
+      window.ClassQ = {
+        mode: 'live',
+        async submit(p){ await fs.addDoc(fs.collection(db,'questions'), {app:p.app,name:p.name||'',klass:p.klass||'',questions:p.questions||[],created:Date.now()}); },
+        subscribe(a,cb){ const qy=fs.query(fs.collection(db,'questions'), fs.orderBy('created','desc'), fs.limit(400));
+          return fs.onSnapshot(qy, snap=>{ const list=[]; snap.forEach(d=>{ const v=d.data(); if(v.app===a) list.push(v); }); cb(list); }, ()=>cb([])); }
+      };
+    } catch(e){ setLocal(); }
+  }
+  window.dispatchEvent(new Event('classq-ready'));
+}
+init();
 </script>
 </body>
 </html>
