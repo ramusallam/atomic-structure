@@ -577,7 +577,7 @@ class ElectronCloud {
         p.av = Math.max(-0.07, Math.min(0.07, p.av)) * 0.94;
         p.ang += p.av + dir * 0.0009 * f;
         p.rPhase += 0.004 * p.rSpeed * f;
-        // bee-buzz jitter — amplitude grows with shell number (less nuclear pull)
+        // bee-buzz jitter; amplitude grows with shell number (less nuclear pull)
         p.jx = (p.jx + (Math.random()-0.5)*buzz) * 0.82;
         p.jy = (p.jy + (Math.random()-0.5)*buzz) * 0.82;
       }
@@ -613,7 +613,7 @@ class ElectronCloud {
       const isVal = opts.valence && i === occ;
       const core = isVal ? '#a855f7' : '#6366f1';
       const glow = isVal ? '168,85,247' : '129,140,248';
-      const rAmp = 6 + i * 5; // outer shells breathe wider in/out — looser hold
+      const rAmp = 6 + i * 5; // outer shells breathe wider in/out (looser hold)
       for (const p of this.shells[i]) {
         const rr = r + Math.sin(p.rPhase) * rAmp;
         const ex = this.cx + Math.cos(p.ang)*rr + p.jx;
@@ -684,7 +684,7 @@ scenes.push({
       ctx.globalAlpha=1;
     }
     const status = el('div',{style:'font-family:var(--font-sans);font-size:14.5px;font-weight:600;color:var(--textPrimary);text-align:center;min-height:22px;line-height:1.45'});
-    function restStatus(){ const f=ions[active]; status.innerHTML = `<strong style="color:${f.col}">${ELEMENTS[f.z].n}</strong> burns ${f.name} (${f.wl} nm) — press <strong>Heat the flame</strong>.`; }
+    function restStatus(){ const f=ions[active]; status.innerHTML = `<strong style="color:${f.col}">${ELEMENTS[f.z].n}</strong> burns ${f.name} (${f.wl} nm). Press <strong>Heat the flame</strong>.`; }
     const chips = el('div',{class:'tool-row'}, Object.keys(ions).map(k => el('button',{
       class:'chip'+(k===active?' active':''), 'data-k':k,
       onclick(){ active=k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',ch.dataset.k===k)); phase='rest'; t=0; burn=0; excite=0; photon=null; restStatus(); }
@@ -697,9 +697,9 @@ scenes.push({
       const RAD=[46,82,118,154,190]; const occ = shellsFor(f.z).length-1, outerR = RAD[occ], destR = RAD[occ+1];
 
       // excite -> hold -> heat removed -> fall -> emit
-      if(phase==='rising'){ t=Math.min(1,t+dt/650); excite=ease(t); status.textContent='Heat on — an outer electron absorbs energy and jumps up a level.'; if(t>=1){phase='excited';t=0;} }
-      else if(phase==='excited'){ t=Math.min(1,t+dt/600); excite=1; status.textContent='Excited and unstable — the heat is holding it up here.'; if(t>=1){phase='falling';t=0;} }
-      else if(phase==='falling'){ t=Math.min(1,t+dt/650); excite=1-ease(t); status.textContent='Heat removed — it falls back down and releases light.'; if(t>=1){ phase='rest'; t=0; burn=1; photon={t:0, sx:CX, sy:CY-outerR*S}; } }
+      if(phase==='rising'){ t=Math.min(1,t+dt/650); excite=ease(t); status.textContent='Heat on: an outer electron absorbs energy and jumps up a level.'; if(t>=1){phase='excited';t=0;} }
+      else if(phase==='excited'){ t=Math.min(1,t+dt/600); excite=1; status.textContent='Excited and unstable: the heat is holding it up here.'; if(t>=1){phase='falling';t=0;} }
+      else if(phase==='falling'){ t=Math.min(1,t+dt/650); excite=1-ease(t); status.textContent='Heat removed: it falls back down and releases light.'; if(t>=1){ phase='rest'; t=0; burn=1; photon={t:0, sx:CX, sy:CY-outerR*S}; } }
 
       // flame: hot/orange while heating, signature color on emission, small idle otherwise
       let fcol, fbright;
@@ -745,7 +745,7 @@ scenes.push({
         for(let k=0;k<11;k++){ const wob=Math.sin(k*0.9+time/70)*5; const xx=px-Math.cos(ang)*k*6+Math.cos(ang+Math.PI/2)*wob, yy=py-Math.sin(ang)*k*6+Math.sin(ang+Math.PI/2)*wob; k===0?ctx.moveTo(xx,yy):ctx.lineTo(xx,yy); }
         ctx.stroke(); ctx.restore();
         if(photon.t>=1){ photon=null;
-          status.innerHTML = `Light out — the flame glows <strong style="color:${f.col}">${f.name}</strong>, ${ELEMENTS[f.z].n}'s signature color.`; }
+          status.innerHTML = `Light out: the flame glows <strong style="color:${f.col}">${f.name}</strong>, ${ELEMENTS[f.z].n}'s signature color.`; }
       }
       if(burn>0) burn=Math.max(0,burn-dt/1300);
       heatBtn.disabled = phase!=='rest' || !!photon;
@@ -956,7 +956,7 @@ scenes.push({
             status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10<span style="font-size:0.72em;vertical-align:0.4em">14</span> Hz</strong>${fA} ·<strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
             marker.style.left = Math.max(0,Math.min(100,(700-anim.wl)/300*100)) + '%';
           } else {
-            status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung, more energy stored — ready to fall.`;
+            status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung, more energy stored, ready to fall.`;
           }
           anim = null;
         }
@@ -1295,9 +1295,9 @@ scenes.push({
         a:'Sodium has 11 protons. A 1+ charge means it <strong>lost one electron</strong>, so 11 − 1 = <strong>10 electrons</strong>.' },
       { d:'Challenge', q:'Find the protons, neutrons, and electrons in <sup>16</sup>O<sup>2−</sup>.',
         a:'<strong>8 protons</strong> (oxygen). Neutrons = 16 − 8 = <strong>8</strong>. The 2− charge means it <strong>gained 2 electrons</strong>, so 8 + 2 = <strong>10 electrons</strong>.' },
-      { d:'Simple', q:'Worked — relative average. Chlorine is 75% mass-35 and 25% mass-37. Find its relative atomic mass (Aᵣ).',
+      { d:'Simple', q:'Worked: relative average. Chlorine is 75% mass-35 and 25% mass-37. Find its relative atomic mass (Aᵣ).',
         a:'Multiply each mass by its decimal abundance, then add:<br>(35 × 0.75) + (37 × 0.25)<br>= 26.25 + 9.25<br>= <strong>Aᵣ = 35.5</strong>.' },
-      { d:'Challenge', q:'Worked — solving for percentages. Boron has isotopes B-10 and B-11 and a relative atomic mass of 10.8. Find the percentage of each isotope.',
+      { d:'Challenge', q:'Worked: solving for percentages. Boron has isotopes B-10 and B-11 and a relative atomic mass of 10.8. Find the percentage of each isotope.',
         a:'Let x = fraction of B-10, so (1 − x) = fraction of B-11.<br>10x + 11(1 − x) = 10.8<br>10x + 11 − 11x = 10.8<br>−x = −0.2 &nbsp;→&nbsp; x = 0.2<br>So <strong>20% B-10 and 80% B-11</strong>.' }
     ];
     let done = 0;
@@ -1307,7 +1307,7 @@ scenes.push({
       const pill = el('span',{class:'diff-pill '+(item.d==='Simple'?'diff-simple':'diff-challenge')}, item.d);
       const btn = el('button',{class:'reveal-btn'},'Show solution');
       const rev = el('div',{class:'reveal-content',hidden:'',html:item.a});
-      btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown — copy it down'; btn.disabled=true;
+      btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown, copy it down'; btn.disabled=true;
         done++; bar.querySelector('.pb-fill').style.width=(done/qs.length*100)+'%';
         text.textContent = done===qs.length?`All ${qs.length} checked`:`${done} of ${qs.length} checked`;
         text.classList.toggle('complete', done===qs.length); });
@@ -1323,7 +1323,7 @@ scenes.push({
   seeLabel: 'Your questions',
   heading: 'Step 12: What Are You Wondering?',
   notes: "You have seen how protons and neutrons sit in the nucleus, how electrons fill shells, and how jumping electrons make the colors from the flame test. Now turn it around. <strong>What are you still wondering?</strong> Your questions launch our next lesson.",
-  notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here with your <strong>name and class</strong> and hit <strong>Submit</strong> — watch the class's questions and the word cloud build below.",
+  notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here with your <strong>name and class</strong> and hit <strong>Submit</strong>. Watch the class's questions and the word cloud build below.",
   build(stage) {
     const APP = 'Atomic Structure';
     const TEACHER_CODE = 'sparky2026'; // change to your own passcode; open the app with ?teacher=1 to reveal the Clear button
@@ -1350,8 +1350,13 @@ scenes.push({
     stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'What the class is wondering'));
     stage.append(el('div',{style:'display:flex;gap:12px;margin-top:6px'},[feed, cloud]));
 
-    // teacher-only clear: hidden unless the URL has ?teacher=1, and still requires the passcode
-    if (new URLSearchParams(location.search).get('teacher') === '1') {
+    // teacher-only clear: remembered per-device. Open once with ?teacher=1 to flag this computer
+    // (?teacher=0 un-flags it). After that the button appears automatically here; passcode still required.
+    const tParam = new URLSearchParams(location.search).get('teacher');
+    if (tParam === '1') { try { localStorage.setItem('classq_teacher','1'); } catch(e){} }
+    if (tParam === '0') { try { localStorage.removeItem('classq_teacher'); } catch(e){} }
+    let isTeacher = false; try { isTeacher = localStorage.getItem('classq_teacher') === '1'; } catch(e){}
+    if (isTeacher) {
       const clearBtn = el('button',{style:'margin-top:10px;font-size:12px;padding:7px 12px;color:var(--accentRed);border:1px solid var(--borderColor);background:#fff'},'Clear all questions (teacher)');
       clearBtn.addEventListener('click', async () => {
         const code = prompt('Teacher passcode to clear all questions:');
@@ -1360,7 +1365,7 @@ scenes.push({
         if (!confirm('Clear ALL submitted questions for this app? This cannot be undone.')) return;
         clearBtn.disabled = true; clearBtn.textContent = 'Clearing...';
         try { await window.ClassQ.clear(APP); clearBtn.textContent = 'Cleared'; }
-        catch(e){ alert('Could not clear — try again.'); }
+        catch(e){ alert('Could not clear, try again.'); }
         setTimeout(() => { clearBtn.disabled = false; clearBtn.textContent = 'Clear all questions (teacher)'; }, 1500);
       });
       stage.append(clearBtn);
@@ -1370,8 +1375,8 @@ scenes.push({
     function paint(items){
       // feed
       feed.innerHTML='';
-      const qlist=[]; (items||[]).forEach(it => (it.questions||[]).forEach(q => { if(q) qlist.push({q, who:(it.name||'—'), kl:(it.klass||'')}); }));
-      if(!qlist.length){ feed.innerHTML='<div class="caption" style="padding:16px">Be the first — submit a question.</div>'; }
+      const qlist=[]; (items||[]).forEach(it => (it.questions||[]).forEach(q => { if(q) qlist.push({q, who:(it.name||'Anon'), kl:(it.klass||'')}); }));
+      if(!qlist.length){ feed.innerHTML='<div class="caption" style="padding:16px">Be the first: submit a question.</div>'; }
       else qlist.forEach(r => feed.append(el('div',{style:'padding:8px 11px;border-bottom:1px solid var(--borderSubtle)'},[
         el('div',{style:'font-size:13.5px;color:var(--textPrimary);line-height:1.4'}, r.q),
         el('div',{style:'font-family:var(--font-mono);font-size:10px;color:var(--textWarmMuted);margin-top:2px'}, r.who + (r.kl?(' · '+r.kl):'')) ])));
@@ -1401,7 +1406,7 @@ scenes.push({
         inputs.forEach(i=>i.value='');
       } catch(err){
         btn.disabled=false; btn.textContent='Submit my questions';
-        msg.textContent='Could not submit — try again.'; msg.classList.remove('complete');
+        msg.textContent='Could not submit, try again.'; msg.classList.remove('complete');
       }
     });
   }
@@ -1471,7 +1476,7 @@ setScene(0);
 <script type="module">
 /* ===== Class Questions collector =====
    Paste your Firebase web config below to turn on the SHARED, live, persistent class feed
-   (one Firebase project can collect every app — rows are tagged by `app`).
+   (one Firebase project can collect every app; rows are tagged by `app`).
    Leave the PASTE_ values to run in local DEMO mode (this browser only) so the UI still works. */
 const firebaseConfig = {
   apiKey: "PASTE_FIREBASE_apiKey",
