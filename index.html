@@ -563,7 +563,7 @@ class ElectronCloud {
   draw(ctx, opts={}) {
     const occ = this.occupiedShell();
     // cloud bands + dashed clickable ring guides
-    for (let i = 0; i < 4; i++) {
+    if (opts.rings !== false) for (let i = 0; i < 4; i++) {
       if (!this.shells[i].length) continue;
       const r = RADII[i];
       const isVal = opts.valence && i === occ;
@@ -673,7 +673,7 @@ scenes.push({
     currentTick = (dt) => {
       const f=ions[active], time=performance.now();
       ctx.clearRect(0,0,c.width,c.height);
-      const occ = shellsFor(f.z).length-1, outerR = RADII[occ], excR = outerR + 46;
+      const RAD=[46,82,118,154,190]; const occ = shellsFor(f.z).length-1, outerR = RAD[occ], destR = RAD[occ+1];
 
       // excite -> hold -> heat removed -> fall -> emit
       if(phase==='rising'){ t=Math.min(1,t+dt/650); excite=ease(t); status.textContent='Heat on — an outer electron absorbs energy and jumps up a level.'; if(t>=1){phase='excited';t=0;} }
@@ -689,21 +689,24 @@ scenes.push({
 
       // ----- atom group, scaled so the excited level sits cleanly above the outer shell -----
       ctx.save(); ctx.translate(CX,CY); ctx.scale(S,S); ctx.translate(-CX,-CY);
-      // the higher "excited" energy level
-      ctx.strokeStyle=`rgba(245,158,11,${0.16+0.55*excite})`; ctx.setLineDash([4,8]); ctx.lineWidth=1.6;
-      ctx.beginPath(); ctx.arc(CX,CY,excR,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
-      if(excite>0.05){ ctx.fillStyle=`rgba(180,83,9,${0.45+0.55*excite})`; ctx.font='700 13px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('excited level', CX, CY-excR-7); }
+      // all shells drawn up front (occupied + the next empty one) so NOTHING new appears on heat;
+      // the valence shell glows purple, the empty destination brightens as the electron rises into it
+      for(let i=0;i<=occ+1;i++){ const r=RAD[i]; if(!r) continue;
+        const isDest=i===occ+1, isVal=i===occ;
+        const a = isDest ? (0.20+0.5*excite) : isVal ? 0.5 : 0.32;
+        ctx.strokeStyle = isVal ? `rgba(168,85,247,${a})` : `rgba(99,102,241,${a})`;
+        ctx.setLineDash([3,7]); ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(CX,CY,r,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
       drawNucleus(ctx,CX,CY,f.z, f.n ?? (Math.round(ELEMENTS[f.z].m)-f.z));
       // during the cycle, lift one valence electron out of the cloud so it can be the hot one
       const counts = shellsFor(f.z).slice();
       const animating = phase!=='rest';
       if(animating && counts[occ]>0) counts[occ]-=1;
-      cloud.setCounts(counts); cloud.update(dt); cloud.draw(ctx,{valence:true});
+      cloud.setCounts(counts); cloud.update(dt); cloud.draw(ctx,{valence:true, rings:false});
       if(animating){
-        const rHot = outerR + (excR-outerR)*excite;
+        const rHot = outerR + (destR-outerR)*excite;
         const hx = CX + Math.sin(time/110)*4, hy = CY - rHot;   // rides up the top, keeps a little buzz
         ctx.strokeStyle='rgba(168,85,247,0.45)'; ctx.lineWidth=2; ctx.setLineDash([3,5]);
-        ctx.beginPath(); ctx.moveTo(CX, CY-outerR); ctx.lineTo(CX, CY-excR); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(CX, CY-outerR); ctx.lineTo(CX, CY-destR); ctx.stroke(); ctx.setLineDash([]);
         const g=ctx.createRadialGradient(hx,hy,0,hx,hy,16); g.addColorStop(0,'rgba(168,85,247,0.75)'); g.addColorStop(1,'rgba(168,85,247,0)');
         ctx.fillStyle=g; ctx.beginPath(); ctx.arc(hx,hy,16,0,Math.PI*2); ctx.fill();
         ctx.fillStyle='#a855f7'; ctx.beginPath(); ctx.arc(hx,hy,7,0,Math.PI*2); ctx.fill();
