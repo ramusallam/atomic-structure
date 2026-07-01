@@ -100,6 +100,20 @@
     border-radius: 999px;
     transition: width 350ms ease;
   }
+  .step-line { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 8px; }
+  .step-line .now { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .step-line .num {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--accentBlue); white-space: nowrap;
+  }
+  .step-line .ttl {
+    font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--textWarm);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .step-line .count {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em; color: var(--textWarmMuted); white-space: nowrap;
+  }
   main {
     max-width: 1340px;
     margin: 0 auto;
@@ -386,9 +400,14 @@
     <div class="eyebrow">Chemistry</div>
     <h1>Atomic Structure</h1>
   </div>
-  <div class="step-indicator" id="stepIndicator">01 / 12</div>
 </header>
-<div class="progress-track"><div class="bar"><div class="fill" id="progressFill"></div></div></div>
+<div class="progress-track">
+  <div class="step-line">
+    <span class="now"><span class="num" id="stepNum">Step 01</span><span class="ttl" id="stepTitle"></span></span>
+    <span class="count" id="stepIndicator">01 / 12</span>
+  </div>
+  <div class="bar"><div class="fill" id="progressFill"></div></div>
+</div>
 
 <main>
   <div class="workspace">
@@ -1360,6 +1379,8 @@ const stepHeadingEl = $('#stepHeading');
 const notesEl = $('#notes');
 const notebookTextEl = $('#notebookText');
 const stepIndicator = $('#stepIndicator');
+const stepNumEl = $('#stepNum');
+const stepTitleEl = $('#stepTitle');
 const progressFill = $('#progressFill');
 const prevBtn = $('#prevBtn');
 const nextBtn = $('#nextBtn');
@@ -1372,8 +1393,11 @@ function setScene(i) {
   currentTick = null;
   const s = scenes[i];
   stageEl.innerHTML = '';
+  const shortTitle = s.heading.replace(/^Step \d+:\s*/, '');
   stageLabel.textContent = s.seeLabel || 'What you see';
-  stepHeadingEl.textContent = 'Step ' + (i+1) + ': ' + s.heading.replace(/^Step \d+:\s*/, '');
+  stepHeadingEl.textContent = 'Step ' + (i+1) + ': ' + shortTitle;
+  stepNumEl.textContent = 'Step ' + pad2(i+1);
+  stepTitleEl.textContent = shortTitle;
   notesEl.innerHTML = s.notes;
   notebookTextEl.innerHTML = s.notebook;
   stepIndicator.textContent = `${pad2(i+1)} / ${pad2(scenes.length)}`;
