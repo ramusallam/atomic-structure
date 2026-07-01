@@ -1326,6 +1326,7 @@ scenes.push({
   notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here with your <strong>name and class</strong> and hit <strong>Submit</strong> — watch the class's questions and the word cloud build below.",
   build(stage) {
     const APP = 'Atomic Structure';
+    const TEACHER_CODE = 'sparky2026'; // change to your own passcode; open the app with ?teacher=1 to reveal the Clear button
     stage.append(el('div',{class:'summary-card',style:'border-left-color:var(--accentBlue)'},[
       el('div',{class:'sc-tag',style:'color:var(--accentBlue)'},'Launch the next lesson'),
       el('p',{},'Keep your questions in your notebook, then submit them here. They appear below for the whole class, and the word cloud shows what we are all wondering.')
@@ -1348,6 +1349,22 @@ scenes.push({
     const cloud = el('div',{style:'flex:1;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:var(--bgMain);padding:10px;text-align:center;align-content:center'});
     stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'What the class is wondering'));
     stage.append(el('div',{style:'display:flex;gap:12px;margin-top:6px'},[feed, cloud]));
+
+    // teacher-only clear: hidden unless the URL has ?teacher=1, and still requires the passcode
+    if (new URLSearchParams(location.search).get('teacher') === '1') {
+      const clearBtn = el('button',{style:'margin-top:10px;font-size:12px;padding:7px 12px;color:var(--accentRed);border:1px solid var(--borderColor);background:#fff'},'Clear all questions (teacher)');
+      clearBtn.addEventListener('click', async () => {
+        const code = prompt('Teacher passcode to clear all questions:');
+        if (code === null) return;
+        if (code !== TEACHER_CODE) { alert('Wrong passcode.'); return; }
+        if (!confirm('Clear ALL submitted questions for this app? This cannot be undone.')) return;
+        clearBtn.disabled = true; clearBtn.textContent = 'Clearing...';
+        try { await window.ClassQ.clear(APP); clearBtn.textContent = 'Cleared'; }
+        catch(e){ alert('Could not clear — try again.'); }
+        setTimeout(() => { clearBtn.disabled = false; clearBtn.textContent = 'Clear all questions (teacher)'; }, 1500);
+      });
+      stage.append(clearBtn);
+    }
 
     const STOP = new Set('the a an is are do does of to in on and or why what how when it they that this for with as be can will if so i we you my me their there not have has was were which at by from more than into out up down one two all some about us our your his her also it’s'.split(' '));
     function paint(items){
@@ -1470,7 +1487,8 @@ function setLocal(){
   window.ClassQ = {
     mode: 'demo',
     async submit(p){ const r={app:p.app,name:p.name||'',klass:p.klass||'',questions:p.questions||[],created:Date.now()}; const arr=readLocal(r.app); arr.unshift(r); localStorage.setItem(key(r.app), JSON.stringify(arr.slice(0,300))); notifyLocal(r.app); },
-    subscribe(a,cb){ (listeners[a]=listeners[a]||[]).push(cb); cb(readLocal(a)); return ()=>{ listeners[a]=(listeners[a]||[]).filter(x=>x!==cb); }; }
+    subscribe(a,cb){ (listeners[a]=listeners[a]||[]).push(cb); cb(readLocal(a)); return ()=>{ listeners[a]=(listeners[a]||[]).filter(x=>x!==cb); }; },
+    async clear(a){ localStorage.removeItem(key(a)); notifyLocal(a); }
   };
 }
 async function init(){
@@ -1484,7 +1502,8 @@ async function init(){
         mode: 'live',
         async submit(p){ await fs.addDoc(fs.collection(db,'questions'), {app:p.app,name:p.name||'',klass:p.klass||'',questions:p.questions||[],created:Date.now()}); },
         subscribe(a,cb){ const qy=fs.query(fs.collection(db,'questions'), fs.orderBy('created','desc'), fs.limit(400));
-          return fs.onSnapshot(qy, snap=>{ const list=[]; snap.forEach(d=>{ const v=d.data(); if(v.app===a) list.push(v); }); cb(list); }, ()=>cb([])); }
+          return fs.onSnapshot(qy, snap=>{ const list=[]; snap.forEach(d=>{ const v=d.data(); if(v.app===a) list.push(v); }); cb(list); }, ()=>cb([])); },
+        async clear(a){ const snap=await fs.getDocs(fs.collection(db,'questions')); for (const dd of snap.docs){ if(dd.data().app===a) await fs.deleteDoc(fs.doc(db,'questions',dd.id)); } }
       };
     } catch(e){ setLocal(); }
   }
