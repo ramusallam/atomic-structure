@@ -869,19 +869,16 @@ scenes.push({
   step: 'Step 4: Quantized Energy Levels',
   seeLabel: 'Energy ladder',
   heading: 'Step 4: Energy Comes in Steps',
-  notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder. Now watch them fall. The rungs are <strong>fixed energy levels</strong>, and they <strong>crowd together near the top</strong>, so the gaps are <strong>not equal</strong>. A <strong>bigger fall</strong> means <strong>more energy</strong>, which means <strong>shorter-wavelength, bluer</strong> light. A small fall gives <strong>red</strong>. The electron can drop one rung or tumble <strong>all the way to the ground state</strong> at once, and every drop has its own color.",
-  notebook: "Climb up with <strong>Absorb</strong>, then <strong>Emit</strong>. Record two drops: one <strong>big</strong> (toward blue/violet) and one <strong>small</strong> (toward red). Write the wavelength for each, then answer: which fall released the higher-energy light?",
+  notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder; now watch them fall. The rungs are <strong>fixed energy levels</strong> with unequal gaps. The <strong>farther</strong> an electron falls, the <strong>more energy</strong> the light carries: its <strong>wavelength gets shorter</strong> and its <strong>frequency gets higher</strong>, sliding the color from <strong>red toward violet (ROYGBIV)</strong>. A small fall gives long-wavelength, low-frequency <strong>red</strong>; a big fall gives short-wavelength, high-frequency <strong>violet</strong>.",
+  notebook: "Do a <strong>small</strong> fall and a <strong>big</strong> fall. For each, record the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>. Then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
   build(stage) {
-    const { c, ctx } = makeCanvas(stage, 520, 340);
+    const { c, ctx } = makeCanvas(stage, 520, 330);
     const NMAX = 5;
-    const E = n => -1/(n*n);
     // hand-tuned unequal spacing: big gap low down, gaps shrink upward but never crowd
     const LY = { 1:296, 2:186, 3:116, 4:72, 5:42 };
     const yOf = n => LY[n];
-    let level = 1;
-    let anim = null;     // {from,to,t,dir,wl}
-    let photon = null;
-    const EX = 262;
+    let level = 1, anim = null, lastWL = null, prevWL = null, wavePhase = 0;
+    const EX = 150;
     // emission color: bigger drop = more energy = shorter (bluer) wavelength
     const dropWL = (hi, lo) => {
       const dE = (1/(lo*lo)) - (1/(hi*hi));
@@ -894,64 +891,82 @@ scenes.push({
     function start(to, dir){ if(anim) return; anim = { from: level, to, t:0, dir, wl: dir==='emit'?dropWL(level,to):null }; }
     up.addEventListener('click', () => { if(level<NMAX && !anim) start(level+1,'absorb'); });
     down.addEventListener('click', () => { if(level>1 && !anim){ const to = 1 + Math.floor(Math.random()*(level-1)); start(to,'emit'); } });
-    const status = el('div', { class:'spectrum-readout' }, 'Electron in n = 1 (ground state). Absorb a photon to climb the ladder.');
+    const status = el('div', { class:'spectrum-readout', style:'min-height:18px' }, 'Absorb a photon to climb, then Emit and watch the light.');
+    // ROYGBIV reference bar with a live marker
+    const marker = el('div',{style:'position:absolute;top:-3px;width:3px;height:22px;background:#1c1917;box-shadow:0 0 0 2px #fff;border-radius:2px;left:0%;transition:left 220ms ease'});
+    const bar = el('div',{style:'position:relative;height:16px;border-radius:8px;background:linear-gradient(to right,#ff2d2d,#ff8a00,#ffe000,#39d353,#2ec5ff,#6a5cff,#b14bff)'},[marker]);
+    const specWrap = el('div',{style:'margin-top:8px'},[
+      el('div',{style:'display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--textWarmMuted);margin-bottom:3px'},[el('span',{},'700 nm · low f · red'), el('span',{},'violet · high f · 400 nm')]),
+      bar ]);
+    const inquiry = el('div',{class:'caption',style:'margin-top:8px;padding:9px 12px;font-size:11.5px;border:1px solid rgba(168,85,247,0.35);border-radius:10px;background:rgba(168,85,247,0.06);text-align:left;line-height:1.45'});
+    inquiry.innerHTML = '<strong style="color:var(--accentPurple)">Inquiry:</strong> Do several jumps, some small and some big. As the electron falls a <strong>greater distance</strong>, watch the wave: what happens to the <strong>wavelength</strong>, to the <strong>frequency</strong> (how fast it wiggles), and which way does the color slide along <strong>ROYGBIV</strong>? Write the pattern before you move on.';
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
-      // rungs (unequal spacing — crowd near the top)
+      // ----- energy ladder (left) -----
       for (let n=1;n<=NMAX;n++){
         const y = yOf(n);
         ctx.strokeStyle = 'rgba(99,102,241,0.40)'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(120,y); ctx.lineTo(430,y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(60,y); ctx.lineTo(250,y); ctx.stroke();
         ctx.fillStyle = '#7C6F5A'; ctx.font='600 13px Inter, sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
-        ctx.fillText('n = '+n, 112, y);
-        if (n===1){ ctx.fillStyle='#A0937B'; ctx.font='italic 11px Inter'; ctx.textAlign='left'; ctx.fillText('ground state', 150, y+15); }
+        ctx.fillText('n = '+n, 52, y);
+        if (n===1){ ctx.fillStyle='#A0937B'; ctx.font='italic 10px Inter'; ctx.textAlign='left'; ctx.fillText('ground state', 90, y+14); }
       }
       let curY = yOf(level);
       if (anim) {
         anim.t = Math.min(1, anim.t + dt/(anim.dir==='emit'?520:600));
         const ease = anim.t<0.5 ? 2*anim.t*anim.t : 1-Math.pow(-2*anim.t+2,2)/2;
         curY = yOf(anim.from) + (yOf(anim.to)-yOf(anim.from))*ease;
-        // transition arrow showing the size of the jump, in the photon's color
         const col = anim.wl ? wavelengthToRGB(anim.wl) : '#f59e0b';
         const yA = yOf(anim.from), yB = yOf(anim.to), adir = anim.to>anim.from ? -1 : 1;
         ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = 0.85;
-        ctx.beginPath(); ctx.moveTo(405, yA); ctx.lineTo(405, yB); ctx.stroke();
-        ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(405, yB); ctx.lineTo(400, yB-8*adir); ctx.lineTo(410, yB-8*adir); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(264, yA); ctx.lineTo(264, yB); ctx.stroke();
+        ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(264, yB); ctx.lineTo(259, yB-8*adir); ctx.lineTo(269, yB-8*adir); ctx.closePath(); ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.font='700 10px Roboto Mono'; ctx.textAlign='left'; ctx.textBaseline='middle';
-        ctx.fillText(anim.dir==='emit' ? anim.wl+' nm' : 'absorb', 414, (yA+yB)/2);
         if (anim.t >= 1) {
           level = anim.to;
           if (anim.dir === 'emit') {
-            photon = { x: EX+12, y: yOf(level), wl: anim.wl, life: 1 };
-            const drop = anim.from - anim.to;
-            const size = drop>=3 ? '<strong>Big drop</strong>' : drop===1 ? 'Small drop' : 'Medium drop';
-            status.innerHTML = `Fell <strong>n=${anim.from} → n=${anim.to}</strong>. ${size} → <strong style="color:${wavelengthToRGB(anim.wl)}">${anim.wl} nm</strong> (${colorName(anim.wl)} light).`;
+            prevWL = lastWL; lastWL = anim.wl;
+            const dist = anim.from - anim.to, f = (3000/anim.wl).toFixed(1), col2 = wavelengthToRGB(anim.wl);
+            const wlA = prevWL==null?'':(anim.wl<prevWL?' <span style="color:#166534">↓ shorter</span>':anim.wl>prevWL?' <span style="color:#9a3412">↑ longer</span>':' = same');
+            const fA  = prevWL==null?'':(anim.wl<prevWL?' <span style="color:#166534">↑ higher</span>':anim.wl>prevWL?' <span style="color:#9a3412">↓ lower</span>':' = same');
+            status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10¹⁴ Hz</strong>${fA} · <strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
+            marker.style.left = Math.max(0,Math.min(100,(700-anim.wl)/300*100)) + '%';
           } else {
-            status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung means more energy stored.`;
+            status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung, more energy stored — ready to fall.`;
           }
           anim = null;
         }
       }
-      // emitted photon — vivid, colored by the size of the fall
-      if (photon) {
-        photon.x += dt*0.34; photon.life -= dt/1500;
-        const col = wavelengthToRGB(photon.wl);
-        ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.strokeStyle = col;
-        ctx.globalAlpha = Math.max(0, photon.life); ctx.lineWidth = 3;
+      // ----- emitted-light wave (right): wavelength + frequency you can SEE -----
+      const WX0=300, WX1=506, WY=120, A=24;
+      ctx.fillStyle='#57534E'; ctx.font='700 10px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+      ctx.fillText('EMITTED LIGHT', (WX0+WX1)/2, WY-A-14);
+      if (lastWL) {
+        const col = wavelengthToRGB(lastWL);
+        const pxPerCycle = lastWL/13;                 // shorter wavelength -> tighter wave
+        wavePhase += dt * 0.004 * (600/lastWL);       // higher frequency -> faster wiggle
+        ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.shadowColor = col; ctx.shadowBlur = 8;
         ctx.beginPath();
-        for (let k=0;k<20;k++){ const px=photon.x+k*7, py=photon.y+Math.sin(k+photon.x/7)*7; k===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }
-        ctx.stroke(); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-        if (photon.life<=0) photon=null;
+        for (let x=WX0;x<=WX1;x++){ const y=WY + A*Math.sin((x-WX0)/pxPerCycle*Math.PI*2 - wavePhase); x===WX0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+        ctx.stroke(); ctx.shadowBlur = 0;
+        // one-wavelength bracket
+        const bx0=WX0+4, bx1=bx0+pxPerCycle, by=WY+A+9;
+        ctx.strokeStyle='rgba(87,83,78,0.7)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(bx0,by-4); ctx.lineTo(bx0,by); ctx.lineTo(bx1,by); ctx.lineTo(bx1,by-4); ctx.stroke();
+        ctx.fillStyle='#7C6F5A'; ctx.font='600 10px Inter'; ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText('one wavelength (λ)', (bx0+bx1)/2, by+3);
+      } else {
+        ctx.fillStyle='#A0937B'; ctx.font='italic 12px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('Emit to see the light wave →', (WX0+WX1)/2, WY);
       }
-      // electron
+      // ----- electron on the ladder -----
       const ex=EX, ey=curY;
       const g=ctx.createRadialGradient(ex,ey,0,ex,ey,18); g.addColorStop(0,'rgba(129,140,248,0.7)'); g.addColorStop(1,'rgba(129,140,248,0)');
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(ex,ey,18,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(ex,ey,10,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#fff'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('e⁻', ex, ey);
     };
-    stage.append(el('div',{class:'tool-row'},[up,down]), status, el('div',{class:'caption'},'Rungs crowd near the top, so the gaps are unequal. Bigger fall = higher energy = shorter wavelength (bluer).'));
+    stage.append(el('div',{class:'tool-row'},[up,down]), status, specWrap, inquiry);
   }
 });
 
