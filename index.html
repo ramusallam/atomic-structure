@@ -1291,36 +1291,52 @@ scenes.push({
   }
 });
 
+// Paste your deployed Google Apps Script Web App URL (ends in /exec) here to collect student questions:
+const QUESTIONS_ENDPOINT = 'PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';
+
 // ---- Step 12: Your Questions (launch the next lesson) ----
 scenes.push({
   step: 'Step 12: Your Questions',
   seeLabel: 'Your questions',
   heading: 'Step 12: What Are You Wondering?',
   notes: "You have seen how protons and neutrons sit in the nucleus, how electrons fill shells, and how jumping electrons make the colors you saw in the flame test. Now turn it around. <strong>What are you still wondering?</strong> The best questions are the ones the simulation could not fully answer.",
-  notebook: "List <strong>at least 5 questions</strong> you still have about atoms, electrons, or light. There are no wrong questions. We will use these as the launch points for our next lesson, so make them real.",
+  notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here, add your <strong>name and class</strong>, and hit <strong>Submit</strong> so I get them before our next lesson. There are no wrong questions.",
   build(stage) {
     stage.append(el('div',{class:'summary-card',style:'border-left-color:var(--accentBlue)'},[
       el('div',{class:'sc-tag',style:'color:var(--accentBlue)'},'Launch the next lesson'),
-      el('p',{},'Write at least five real questions the simulation raised for you. Type them here, then copy them into your notebook. These become where we start next class.')
+      el('p',{},'Write your questions in your notebook, then type them here and hit Submit. I read every one before we start next class.')
     ]));
+    const inS = 'font-family:var(--font-sans);font-size:14px;padding:9px 12px;border:1px solid var(--borderColor);border-radius:9px;background:#fff;color:var(--textPrimary)';
+    const name = el('input',{type:'text',placeholder:'Your name',style:inS+';flex:2;min-width:0'});
+    const klass = el('input',{type:'text',placeholder:'Class / period',style:inS+';flex:1;min-width:0'});
+    stage.append(el('div',{style:'display:flex;gap:8px;margin-top:4px'},[name,klass]));
     const inputs = [];
-    const wrap = el('div',{style:'display:flex;flex-direction:column;gap:8px;margin-top:4px'});
+    const wrap = el('div',{style:'display:flex;flex-direction:column;gap:8px;margin-top:8px'});
     for (let i=0;i<5;i++){
-      const inp = el('input',{type:'text',placeholder:'I wonder...',style:'flex:1;font-family:var(--font-sans);font-size:14px;padding:9px 12px;border:1px solid var(--borderColor);border-radius:9px;background:#fff;color:var(--textPrimary)'});
+      const inp = el('input',{type:'text',placeholder:'I wonder...',style:inS+';flex:1;min-width:0'});
       inputs.push(inp);
       wrap.append(el('div',{style:'display:flex;align-items:center;gap:10px'},[ el('div',{class:'q-num',style:'min-width:20px'}, (i+1)+'.'), inp ]));
     }
     stage.append(wrap);
-    const copyBtn = el('button',{class:'primary',style:'margin-top:2px'},'Copy my questions');
+    const btn = el('button',{class:'primary',style:'margin-top:2px'},'Submit my questions');
     const msg = el('div',{class:'pb-text'});
-    copyBtn.addEventListener('click', async () => {
-      const lines = inputs.map(inp=>inp.value.trim()).filter(Boolean).map((v,i)=>`${i+1}. ${v}`);
-      if (!lines.length){ msg.textContent='Type at least one question first.'; msg.classList.remove('complete'); return; }
-      try { await navigator.clipboard.writeText('My questions from the Atomic Structure simulation:\n'+lines.join('\n'));
-        msg.textContent = `✓ Copied ${lines.length} question${lines.length>1?'s':''} — paste them into your notebook.`; msg.classList.add('complete'); }
-      catch(e){ msg.textContent='Copy blocked — select the text and copy it by hand.'; msg.classList.remove('complete'); }
+    btn.addEventListener('click', async () => {
+      const qs = inputs.map(i=>i.value.trim()).filter(Boolean);
+      if(!name.value.trim() || !klass.value.trim()){ msg.textContent='Add your name and class first.'; msg.classList.remove('complete'); return; }
+      if(!qs.length){ msg.textContent='Type at least one question first.'; msg.classList.remove('complete'); return; }
+      btn.disabled=true; btn.textContent='Submitting...'; msg.textContent='';
+      const payload = { app:'Atomic Structure', name:name.value.trim(), klass:klass.value.trim(), questions:qs, ts:new Date().toISOString() };
+      try {
+        if(QUESTIONS_ENDPOINT.indexOf('PASTE_')>=0) throw new Error('not-configured');
+        await fetch(QUESTIONS_ENDPOINT, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
+        btn.textContent='✓ Submitted'; msg.textContent='Thanks! Your questions are in — keep your copy in your notebook.'; msg.classList.add('complete');
+      } catch(err){
+        btn.disabled=false; btn.textContent='Submit my questions';
+        msg.textContent = err.message==='not-configured' ? 'Submissions are not connected yet — tell your teacher.' : 'Could not submit — check your connection and try again.';
+        msg.classList.remove('complete');
+      }
     });
-    stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[copyBtn, msg]));
+    stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[btn, msg]));
   }
 });
 
