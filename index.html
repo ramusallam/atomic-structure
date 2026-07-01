@@ -781,7 +781,7 @@ scenes.push({
   seeLabel: 'Bohr model builder',
   heading: 'Step 3: Electron Shells',
   notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. Shells fill from the inside out: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds.",
-  notebook: "Build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2). Draw both, label each shell's count, and circle the <strong>valence electrons</strong>. Then answer the <strong>Hypothesize</strong> prompt in the tool: why do the outer electrons feel less pull from the nucleus than the inner ones?",
+  notebook: "Build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2). Draw both, label each shell's count, and circle the <strong>valence electrons</strong>. Then <strong>hypothesize</strong>: the outer electrons buzz wider and feel less pull from the nucleus, why? (Hint: count how many electrons sit between the outer electron and the nucleus.)",
   build(stage) {
     const atoms = [3,6,8,11,12,17,19,20];
     let z = 3;
@@ -857,9 +857,7 @@ scenes.push({
         ctx.fillText('← valence shell', CX + RADII[occ] + 8, CY);
       }
     };
-    const inquiry = el('div', { class:'caption', style:'margin-top:6px;padding:9px 12px;font-size:11.5px;border:1px solid rgba(168,85,247,0.35);border-radius:10px;background:rgba(168,85,247,0.06);text-align:left;line-height:1.45' });
-    inquiry.innerHTML = '<strong style="color:var(--accentPurple)">Hypothesize:</strong> The outer electrons buzz <strong>wider</strong> than the tightly-held inner ones, they feel <strong>less pull</strong> from the nucleus. Why? Write your best idea before you move on. <em>(Hint: count how many electrons sit between the outer electron and the nucleus.)</em>';
-    stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Click the glowing shell to drop in an electron. Inner shells fill first; the outer shell (purple) holds the valence electrons.'), inquiry);
+    stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Inner shells fill first; the purple outer shell holds the valence electrons.'));
     render();
   }
 });
@@ -1119,10 +1117,13 @@ scenes.push({
       onclick(){ neutrons=nv; isoBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.n===nv)); render(); }}, `C-${6+nv}`)));
     const ionBtns = el('div',{class:'tool-row'}, [['+1',1],['0',0],['−1',-1]].map(([lab,cv]) => el('button',{type:'button',class:'chip'+(cv===charge?' active':''),'data-c':cv,
       onclick(){ charge=cv; ionBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.c===cv)); render(); }}, `Na ${lab}`)));
-    const readout = el('div',{class:'spectrum-readout'});
+    const readout = el('div',{style:'font-family:var(--font-sans);font-size:14px;font-weight:600;color:var(--textPrimary);text-align:center;line-height:1.55'});
     function render(){
-      readout.innerHTML = `Left: <strong>Carbon-${6+neutrons}</strong> (6 protons, ${neutrons} neutrons) is an <strong>isotope</strong>. ` +
-        `Right: <strong>Na${charge>0?'⁺':charge<0?'⁻':''}</strong> ${charge===0?'is neutral':charge>0?'is a cation (lost 1 electron)':'is an anion (gained 1 electron)'}.`;
+      const ionDesc = charge===0?'neutral atom':charge>0?'cation, lost 1 electron':'anion, gained 1 electron';
+      const sym = charge>0?'⁺':charge<0?'⁻':'';
+      readout.innerHTML =
+        `<div><strong style="color:var(--accentBlue)">Isotope</strong> · Carbon-${6+neutrons}: 6 protons, ${neutrons} neutrons</div>` +
+        `<div><strong style="color:var(--accentPurple)">Ion</strong> · Na${sym}: ${ionDesc}</div>`;
     }
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
@@ -1148,15 +1149,19 @@ scenes.push({
   seeLabel: 'Particle counter',
   heading: 'Step 8: Protons, Neutrons, Electrons',
   notes: "<strong>Protons</strong> come from the atomic number. <strong>Neutrons</strong> = mass number minus protons. For an ion, <strong>electrons</strong> = protons minus the charge: lose electrons for a +, gain electrons for a −.",
-  notebook: "Fill the table. For ³⁵Cl⁻ show your work: <strong>17 protons, 18 neutrons, 18 electrons</strong>. Then check yourself.",
+  notebook: "Fill the table. For chlorine-35 with a <strong>−1</strong> charge, show your work: <strong>17 protons, 18 neutrons, 18 electrons</strong>. Then check yourself.",
   build(stage) {
     const rows = [
-      { label:'³⁵Cl⁻', z:17, mass:35, charge:-1 },
-      { label:'²³Na⁺', z:11, mass:23, charge:1 },
-      { label:'²⁴Mg²⁺', z:12, mass:24, charge:2 },
-      { label:'¹⁶O²⁻', z:8, mass:16, charge:-2 },
-      { label:'⁴⁰Ca²⁺', z:20, mass:40, charge:2 }
+      { sym:'Cl', z:17, mass:35, charge:-1 },
+      { sym:'Na', z:11, mass:23, charge:1 },
+      { sym:'Mg', z:12, mass:24, charge:2 },
+      { sym:'O',  z:8,  mass:16, charge:-2 },
+      { sym:'Ca', z:20, mass:40, charge:2 }
     ];
+    const chgStr = c => c>0 ? '+'+c : c<0 ? '−'+Math.abs(c) : '';
+    const ionHTML = r => `<sup style="font-size:0.55em;font-weight:700;color:var(--textWarmMuted);margin-right:2px">${r.mass}</sup>${r.sym}` +
+      (r.charge ? `<sup style="font-size:0.55em;font-weight:700;margin-left:2px;color:${r.charge>0?'#b45309':'#4f46e5'}">${chgStr(r.charge)}</sup>` : '');
+    const ionText = r => `${r.mass}${r.sym} (${chgStr(r.charge)})`;
     const tbl = el('table', { class:'counter' });
     tbl.append(el('tr',{},[el('th',{},'Ion'),el('th',{},'Protons'),el('th',{},'Neutrons'),el('th',{},'Electrons')]));
     rows.forEach(r => {
@@ -1164,11 +1169,11 @@ scenes.push({
       const mk = key => { const i = el('input',{type:'number',inputmode:'numeric'});
         i.addEventListener('input',()=>{ const v=i.value.trim(); if(v==='') {i.classList.remove('ok','no');return;} i.classList.toggle('ok',+v===ans[key]); i.classList.toggle('no',+v!==ans[key]); });
         return i; };
-      tbl.append(el('tr',{},[el('td',{class:'sym',html:r.label}), el('td',{},mk('p')), el('td',{},mk('n')), el('td',{},mk('e'))]));
+      tbl.append(el('tr',{},[el('td',{class:'sym',html:ionHTML(r)}), el('td',{},mk('p')), el('td',{},mk('n')), el('td',{},mk('e'))]));
     });
     const revBtn = el('button',{class:'reveal-btn','data-show':'Show all answers','data-hide':'Hide answers'},'Show all answers');
     const rev = el('div',{class:'reveal-content',hidden:''});
-    rev.innerHTML = rows.map(r => `<div><strong>${r.label.replace(/<[^>]+>/g,'')}</strong>: ${r.z} protons, ${r.mass-r.z} neutrons, ${r.z-r.charge} electrons</div>`).join('');
+    rev.innerHTML = rows.map(r => `<div><strong>${ionText(r)}</strong>: ${r.z} protons, ${r.mass-r.z} neutrons, ${r.z-r.charge} electrons</div>`).join('');
     revBtn.addEventListener('click',()=>{ const h=rev.hasAttribute('hidden'); if(h){rev.removeAttribute('hidden');revBtn.textContent=revBtn.dataset.hide;} else {rev.setAttribute('hidden','');revBtn.textContent=revBtn.dataset.show;} });
     stage.append(tbl, el('div',{style:'margin-top:12px;text-align:center'},[revBtn]), rev, el('div',{class:'caption',style:'margin-top:8px'},'Green means your number matches.'));
   }
