@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Starlight · Lab Printables</title>
+<style>
+  :root{
+    --cream:#FAF7F2; --white:#FFFFFF; --ink:#1C1917; --warm:#57534E; --warm-muted:#7C6F5A;
+    --indigo:#4F46E5; --indigo-soft:rgba(79,70,229,0.08); --line:#E7E0D3;
+    --font-sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-serif:'Roboto Serif',Georgia,serif;
+    --font-mono:'Roboto Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--cream);color:var(--ink);font-family:var(--font-sans);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{background:var(--white);max-width:8.5in;margin:24px auto;padding:0.55in 0.6in;box-shadow:0 2px 14px rgba(28,25,23,0.08);border-radius:14px}
+  .eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--indigo);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .eyebrow svg{width:13px;height:13px;stroke:var(--indigo)}
+  h1{font-family:var(--font-serif);font-size:25px;font-weight:700;line-height:1.15;margin-bottom:4px}
+  .sub{font-size:12.5px;color:var(--warm-muted);margin-bottom:18px}
+  h2{font-family:var(--font-serif);font-size:15px;font-weight:700;margin:16px 0 8px}
+  .strip-card{border:1px solid var(--line);border-radius:12px;padding:10px 12px 8px;margin-bottom:10px;background:var(--white)}
+  .strip-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .gas-name{font-family:var(--font-serif);font-weight:700;font-size:14.5px}
+  .gas-sym{font-family:var(--font-mono);font-size:10.5px;color:var(--warm-muted)}
+  .notice{font-size:10.5px;color:var(--warm);margin-top:5px;line-height:1.4}
+  .notice strong{color:var(--ink)}
+  svg.spec{display:block;width:100%;height:auto}
+  table.decoder{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px}
+  table.decoder th{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--warm-muted);text-align:left;padding:6px 8px;border-bottom:2px solid var(--ink)}
+  table.decoder td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.45}
+  table.decoder td.fp{font-family:var(--font-serif);font-weight:700;white-space:nowrap}
+  table.decoder td.obj{font-weight:600;white-space:nowrap}
+  .callout{border:1px solid rgba(79,70,229,0.35);background:var(--indigo-soft);border-radius:10px;padding:10px 13px;font-size:11.5px;line-height:1.5;margin-top:14px;display:flex;gap:9px}
+  .callout svg{width:16px;height:16px;stroke:var(--indigo);flex-shrink:0;margin-top:1px}
+  .name-line{text-align:right;font-size:12px;color:var(--warm);margin-bottom:14px}
+  .name-line span{display:inline-block;border-bottom:1px solid var(--ink);width:2.4in;margin-left:6px}
+  .prompt{font-size:12.5px;line-height:1.5;margin:10px 0 6px}
+  .writelines{border-bottom:1px solid var(--line);height:24px}
+  table.sheet{width:100%;border-collapse:collapse;margin-top:8px}
+  table.sheet th{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--warm-muted);text-align:left;padding:5px 6px;border-bottom:2px solid var(--ink)}
+  table.sheet td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .star-label{font-family:var(--font-serif);font-weight:700;font-size:15px;white-space:nowrap}
+  .fill{border-bottom:1px solid var(--warm-muted);height:20px;min-width:0.95in}
+  .footer{margin-top:16px;font-family:var(--font-mono);font-size:9px;color:var(--warm-muted);letter-spacing:0.06em}
+  @media print{
+    body{background:var(--white)}
+    .page{box-shadow:none;border-radius:0;margin:0 auto;max-width:none;page-break-after:always;padding:0.45in 0.55in}
+    .page:last-child{page-break-after:auto}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1: GAS FINGERPRINT KEY ============ -->
+<div class="page">
+  <div class="eyebrow">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>
+    Reading Starlight · Key 1 of 2
+  </div>
+  <h1>Gas Fingerprint Key</h1>
+  <div class="sub">Every glowing gas emits its own exact set of lines. Match the pattern you see, not just one color.</div>
+
+  <!-- Hydrogen -->
+  <div class="strip-card">
+    <div class="strip-head"><span class="gas-name">Hydrogen</span><span class="gas-sym">H · lines at 656, 486, 434, 410 nm</span></div>
+    <svg class="spec" viewBox="0 0 640 74" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="4" width="600" height="46" rx="5" fill="#0a0a0a"/>
+      <rect x="71" y="6" width="2" height="42" fill="#8F00D4"/>
+      <rect x="114" y="6" width="2.5" height="42" fill="#5B2AE0"/>
+      <rect x="205" y="6" width="3" height="42" fill="#00A6C8"/>
+      <rect x="505" y="6" width="4" height="42" fill="#E8112D"/>
+      <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+        <text x="55" y="66">400</text><text x="196" y="66">480</text><text x="373" y="66">580</text><text x="549" y="66">680</text><text x="620" y="66">nm</text>
+      </g>
+    </svg>
+    <div class="notice"><strong>Notice:</strong> four clean, well-spaced lines with one strong red. The exact set from the lecture: 656, 486, 434, 410 nm.</div>
+  </div>
+
+  <!-- Helium -->
+  <div class="strip-card">
+    <div class="strip-head"><span class="gas-name">Helium</span><span class="gas-sym">He · brightest line 588 nm</span></div>
+    <svg class="spec" viewBox="0 0 640 74" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="4" width="600" height="46" rx="5" fill="#0a0a0a"/>
+      <rect x="137" y="6" width="2.5" height="42" fill="#4338E8"/>
+      <rect x="180" y="6" width="2" height="42" fill="#1D6BEB"/>
+      <rect x="217" y="6" width="2" height="42" fill="#00A6C8"/>
+      <rect x="234" y="6" width="1.5" height="42" fill="#00B386" opacity="0.85"/>
+      <rect x="385" y="6" width="4.5" height="42" fill="#F5C400"/>
+      <rect x="527" y="6" width="2.5" height="42" fill="#C81E1E"/>
+      <rect x="594" y="6" width="1.5" height="42" fill="#A61B1B" opacity="0.7"/>
+      <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+        <text x="55" y="66">400</text><text x="196" y="66">480</text><text x="373" y="66">580</text><text x="549" y="66">680</text><text x="620" y="66">nm</text>
+      </g>
+    </svg>
+    <div class="notice"><strong>Notice:</strong> one blazing <strong>yellow</strong> line near 588 nm that hydrogen does not have, plus blue and red companions.</div>
+  </div>
+
+  <!-- Neon -->
+  <div class="strip-card">
+    <div class="strip-head"><span class="gas-name">Neon</span><span class="gas-sym">Ne · dense lines 585-703 nm</span></div>
+    <svg class="spec" viewBox="0 0 640 74" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="4" width="600" height="46" rx="5" fill="#0a0a0a"/>
+      <rect x="302" y="6" width="1.5" height="42" fill="#17A34A" opacity="0.6"/>
+      <rect x="382" y="6" width="2" height="42" fill="#F5C400"/>
+      <rect x="388" y="6" width="2" height="42" fill="#F5C400"/>
+      <rect x="398" y="6" width="2" height="42" fill="#F97316"/>
+      <rect x="414" y="6" width="2" height="42" fill="#F97316"/>
+      <rect x="421" y="6" width="2" height="42" fill="#F97316"/>
+      <rect x="436" y="6" width="2" height="42" fill="#F97316"/>
+      <rect x="445" y="6" width="2" height="42" fill="#EF3B24"/>
+      <rect x="454" y="6" width="2" height="42" fill="#EF3B24"/>
+      <rect x="466" y="6" width="2.5" height="42" fill="#EF3B24"/>
+      <rect x="479" y="6" width="3.5" height="42" fill="#E8112D"/>
+      <rect x="496" y="6" width="2" height="42" fill="#E8112D"/>
+      <rect x="514" y="6" width="2" height="42" fill="#C81E1E"/>
+      <rect x="572" y="6" width="1.5" height="42" fill="#A61B1B" opacity="0.8"/>
+      <rect x="590" y="6" width="1.5" height="42" fill="#A61B1B" opacity="0.7"/>
+      <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+        <text x="55" y="66">400</text><text x="196" y="66">480</text><text x="373" y="66">580</text><text x="549" y="66">680</text><text x="620" y="66">nm</text>
+      </g>
+    </svg>
+    <div class="notice"><strong>Notice:</strong> a crowded picket fence of orange and red lines. Nothing else looks this busy on the warm end.</div>
+  </div>
+
+  <!-- Nitrogen -->
+  <div class="strip-card">
+    <div class="strip-head"><span class="gas-name">Nitrogen</span><span class="gas-sym">N₂ · fuzzy bands, not sharp lines</span></div>
+    <svg class="spec" viewBox="0 0 640 74" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="4" width="600" height="46" rx="5" fill="#0a0a0a"/>
+      <rect x="45" y="6" width="21" height="42" fill="#8F00D4" opacity="0.55"/>
+      <rect x="91" y="6" width="26" height="42" fill="#5B2AE0" opacity="0.5"/>
+      <rect x="135" y="6" width="44" height="42" fill="#2E4BE8" opacity="0.3"/>
+      <rect x="355" y="6" width="71" height="42" fill="#F97316" opacity="0.45"/>
+      <rect x="444" y="6" width="105" height="42" fill="#EF3B24" opacity="0.4"/>
+      <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+        <text x="55" y="66">400</text><text x="196" y="66">480</text><text x="373" y="66">580</text><text x="549" y="66">680</text><text x="620" y="66">nm</text>
+      </g>
+    </svg>
+    <div class="notice"><strong>Notice:</strong> smeared <strong>bands</strong> instead of sharp lines: violet-blue on one end, orange-red on the other. The tube glows pink-orange overall.</div>
+  </div>
+
+  <!-- Xenon -->
+  <div class="strip-card">
+    <div class="strip-head"><span class="gas-name">Xenon</span><span class="gas-sym">Xe · blue cluster 450-500 nm</span></div>
+    <svg class="spec" viewBox="0 0 640 74" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="4" width="600" height="46" rx="5" fill="#0a0a0a"/>
+      <rect x="147" y="6" width="2" height="42" fill="#4338E8"/>
+      <rect x="165" y="6" width="2.5" height="42" fill="#2E4BE8"/>
+      <rect x="174" y="6" width="2" height="42" fill="#2E4BE8"/>
+      <rect x="184" y="6" width="2.5" height="42" fill="#1D6BEB"/>
+      <rect x="196" y="6" width="2" height="42" fill="#1D6BEB"/>
+      <rect x="204" y="6" width="2" height="42" fill="#1D6BEB"/>
+      <rect x="218" y="6" width="2" height="42" fill="#00A6C8"/>
+      <rect x="227" y="6" width="1.5" height="42" fill="#00A6C8" opacity="0.8"/>
+      <rect x="283" y="6" width="1.5" height="42" fill="#17A34A" opacity="0.6"/>
+      <rect x="304" y="6" width="1.5" height="42" fill="#17A34A" opacity="0.5"/>
+      <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+        <text x="55" y="66">400</text><text x="196" y="66">480</text><text x="373" y="66">580</text><text x="549" y="66">680</text><text x="620" y="66">nm</text>
+      </g>
+    </svg>
+    <div class="notice"><strong>Notice:</strong> a tight cluster of blue lines and almost nothing warm. The tube looks pale blue-lavender.</div>
+  </div>
+
+  <!-- Mercury -->
+  <div class="strip-card">
+    <div class="strip-head"><span class="gas-name">Mercury</span><span class="gas-sym">Hg · 405, 436, 546, 577+579 nm</span></div>
+    <svg class="spec" viewBox="0 0 640 74" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="4" width="600" height="46" rx="5" fill="#0a0a0a"/>
+      <rect x="64" y="6" width="2.5" height="42" fill="#8F00D4"/>
+      <rect x="119" y="6" width="4" height="42" fill="#5B2AE0"/>
+      <rect x="313" y="6" width="4" height="42" fill="#17A34A"/>
+      <rect x="368" y="6" width="2" height="42" fill="#F5C400"/>
+      <rect x="373" y="6" width="2" height="42" fill="#F5C400"/>
+      <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+        <text x="55" y="66">400</text><text x="196" y="66">480</text><text x="373" y="66">580</text><text x="549" y="66">680</text><text x="620" y="66">nm</text>
+      </g>
+    </svg>
+    <div class="notice"><strong>Notice:</strong> sparse and cool: one violet, one strong <strong>blue</strong>, one strong <strong>green</strong>, and a tight yellow pair. No red at all.</div>
+  </div>
+
+  <div class="footer">READING STARLIGHT · GAS FINGERPRINT KEY · FOLLOWS THE ATOMIC STRUCTURE LECTURE (2a)</div>
+</div>
+
+<!-- ============ PAGE 2: SKY SURVEY DECODER ============ -->
+<div class="page">
+  <div class="eyebrow">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+    Reading Starlight · Key 2 of 2
+  </div>
+  <h1>Sky Survey Decoder</h1>
+  <div class="sub">You identified the gas. Now find out what you were actually looking at.</div>
+
+  <table class="decoder">
+    <tr><th>Fingerprint you found</th><th>What you were looking at</th><th>The story</th></tr>
+    <tr>
+      <td class="fp">Hydrogen</td>
+      <td class="obj">Proxima Centauri</td>
+      <td>The nearest star to our Sun, a small red dwarf 4.2 light-years away. Like almost every star, it is overwhelmingly hydrogen. Its light left the star over four years before it reached your eyes tonight.</td>
+    </tr>
+    <tr>
+      <td class="fp">Helium</td>
+      <td class="obj">The Sun</td>
+      <td>In 1868, astronomers studying the Sun's light during an eclipse found a bright yellow line near 588 nm that matched no element known on Earth. They had discovered a new element inside a star, 93 million miles away, using only its fingerprint. They named it helium, after helios, the Greek word for Sun.</td>
+    </tr>
+    <tr>
+      <td class="fp">Neon</td>
+      <td class="obj">The Cat's Eye Nebula</td>
+      <td>A dying star that has blown off its outer layers into glowing shells of gas. The neon in those shells was forged inside the star itself. Stars are element factories, and this is what one looks like at the end.</td>
+    </tr>
+    <tr>
+      <td class="fp">Nitrogen</td>
+      <td class="obj">The aurora, Earth's own sky</td>
+      <td>Not a star. Charged particles streaming off the Sun slam into the nitrogen in our upper atmosphere and make it glow, exactly like the gas in a spectrum tube. The northern lights are a planet-sized discharge tube.</td>
+    </tr>
+    <tr>
+      <td class="fp">Xenon</td>
+      <td class="obj">Stadium floodlights</td>
+      <td>Caught you. This light never came from space: xenon arc lamps light up stadiums and IMAX projectors. Astronomers must recognize and filter out human-made light like this every single night.</td>
+    </tr>
+    <tr>
+      <td class="fp">Mercury</td>
+      <td class="obj">A parking-lot streetlight</td>
+      <td>Fooled again. Mercury-vapor lamps light streets and gyms, and their glow washes out the night sky. Light pollution is such a problem that observatories are built on remote mountaintops to escape fingerprints like this one.</td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div><strong>Careful:</strong> not everything glowing in the night sky is a star. Two of the lights in this survey were made by people. Your fingerprint evidence is the only way to tell.</div>
+  </div>
+
+  <div class="footer">READING STARLIGHT · SKY SURVEY DECODER · FOLLOWS THE ATOMIC STRUCTURE LECTURE (2a)</div>
+</div>
+
+<!-- ============ PAGE 3: STUDENT SHEET ============ -->
+<div class="page">
+  <div class="name-line">Name<span></span></div>
+  <div class="eyebrow">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+    Reading Starlight · Student Sheet
+  </div>
+  <h1>You Are the Astronomer</h1>
+  <div class="sub">Six lights. Sketch each fingerprint, name the gas, then decode what you were really looking at. All other writing happens in the lab.</div>
+
+  <table class="sheet">
+    <tr><th style="width:0.7in">Star</th><th>Sketch the lines you see (use colored pencils)</th><th style="width:1.05in">Gas</th><th style="width:1.35in">What is it really?</th></tr>
+    <tr><td class="star-label">A</td><td>
+      <svg class="spec" viewBox="0 0 640 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="2" width="600" height="38" rx="4" fill="none" stroke="#7C6F5A" stroke-width="1"/>
+        <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+          <text x="55" y="54">400</text><text x="196" y="54">480</text><text x="373" y="54">580</text><text x="549" y="54">680</text><text x="620" y="54">nm</text>
+        </g>
+        <g stroke="#E7E0D3" stroke-width="1"><line x1="55" y1="2" x2="55" y2="40"/><line x1="196" y1="2" x2="196" y2="40"/><line x1="373" y1="2" x2="373" y2="40"/><line x1="549" y1="2" x2="549" y2="40"/></g>
+      </svg>
+    </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
+    <tr><td class="star-label">B</td><td>
+      <svg class="spec" viewBox="0 0 640 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="2" width="600" height="38" rx="4" fill="none" stroke="#7C6F5A" stroke-width="1"/>
+        <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+          <text x="55" y="54">400</text><text x="196" y="54">480</text><text x="373" y="54">580</text><text x="549" y="54">680</text><text x="620" y="54">nm</text>
+        </g>
+        <g stroke="#E7E0D3" stroke-width="1"><line x1="55" y1="2" x2="55" y2="40"/><line x1="196" y1="2" x2="196" y2="40"/><line x1="373" y1="2" x2="373" y2="40"/><line x1="549" y1="2" x2="549" y2="40"/></g>
+      </svg>
+    </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
+    <tr><td class="star-label">C</td><td>
+      <svg class="spec" viewBox="0 0 640 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="2" width="600" height="38" rx="4" fill="none" stroke="#7C6F5A" stroke-width="1"/>
+        <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+          <text x="55" y="54">400</text><text x="196" y="54">480</text><text x="373" y="54">580</text><text x="549" y="54">680</text><text x="620" y="54">nm</text>
+        </g>
+        <g stroke="#E7E0D3" stroke-width="1"><line x1="55" y1="2" x2="55" y2="40"/><line x1="196" y1="2" x2="196" y2="40"/><line x1="373" y1="2" x2="373" y2="40"/><line x1="549" y1="2" x2="549" y2="40"/></g>
+      </svg>
+    </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
+    <tr><td class="star-label">D</td><td>
+      <svg class="spec" viewBox="0 0 640 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="2" width="600" height="38" rx="4" fill="none" stroke="#7C6F5A" stroke-width="1"/>
+        <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+          <text x="55" y="54">400</text><text x="196" y="54">480</text><text x="373" y="54">580</text><text x="549" y="54">680</text><text x="620" y="54">nm</text>
+        </g>
+        <g stroke="#E7E0D3" stroke-width="1"><line x1="55" y1="2" x2="55" y2="40"/><line x1="196" y1="2" x2="196" y2="40"/><line x1="373" y1="2" x2="373" y2="40"/><line x1="549" y1="2" x2="549" y2="40"/></g>
+      </svg>
+    </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
+    <tr><td class="star-label">E</td><td>
+      <svg class="spec" viewBox="0 0 640 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="2" width="600" height="38" rx="4" fill="none" stroke="#7C6F5A" stroke-width="1"/>
+        <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+          <text x="55" y="54">400</text><text x="196" y="54">480</text><text x="373" y="54">580</text><text x="549" y="54">680</text><text x="620" y="54">nm</text>
+        </g>
+        <g stroke="#E7E0D3" stroke-width="1"><line x1="55" y1="2" x2="55" y2="40"/><line x1="196" y1="2" x2="196" y2="40"/><line x1="373" y1="2" x2="373" y2="40"/><line x1="549" y1="2" x2="549" y2="40"/></g>
+      </svg>
+    </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
+    <tr><td class="star-label">F</td><td>
+      <svg class="spec" viewBox="0 0 640 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="2" width="600" height="38" rx="4" fill="none" stroke="#7C6F5A" stroke-width="1"/>
+        <g font-family="Roboto Mono,monospace" font-size="9" fill="#7C6F5A" text-anchor="middle">
+          <text x="55" y="54">400</text><text x="196" y="54">480</text><text x="373" y="54">580</text><text x="549" y="54">680</text><text x="620" y="54">nm</text>
+        </g>
+        <g stroke="#E7E0D3" stroke-width="1"><line x1="55" y1="2" x2="55" y2="40"/><line x1="196" y1="2" x2="196" y2="40"/><line x1="373" y1="2" x2="373" y2="40"/><line x1="549" y1="2" x2="549" y2="40"/></g>
+      </svg>
+    </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
+  </table>
+
+  <div class="footer">READING STARLIGHT · STUDENT SHEET · FOLLOWS THE ATOMIC STRUCTURE LECTURE (2a)</div>
+</div>
+
+</body>
+</html>
