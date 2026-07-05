@@ -38,6 +38,8 @@
     --proton: #ef4444;
     --neutron: #94a3b8;
     --electron: #6366f1;
+    --cation: #b45309;
+    --anion: #0d9488;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -123,7 +125,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.92fr);
     gap: 26px;
-    align-items: stretch;
+    align-items: start;
   }
   /* ---- stage (what students SEE) ---- */
   .stage {
@@ -152,7 +154,7 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ---- side (what students WRITE) ---- */
-  .side { display: flex; flex-direction: column; gap: 14px; }
+  .side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 12px; }
   .notes-card {
     background: var(--note-bg);
     color: var(--note-ink);
@@ -390,10 +392,15 @@
   .caption { font-style: italic; font-size: 12px; color: var(--textWarmMuted); text-align: center; }
   .spectrum-readout { font-family: var(--font-mono); font-size: 13px; text-align: center; color: var(--textSecondary); min-height: 18px; }
   .status-line { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--textPrimary); text-align: center; line-height: 1.45; min-height: 22px; }
+  .status-line.complete { color: #166534; }
+  button svg, .status-line svg { vertical-align: -2px; }
 
   @media (max-width: 980px) {
     .workspace { grid-template-columns: 1fr; }
     .stage { min-height: 380px; }
+    .side { position: static; }
+    header, main { padding-left: 16px; padding-right: 16px; }
+    .progress-track { padding: 0 16px; }
   }
 </style>
 </head>
@@ -407,7 +414,7 @@
 <div class="progress-track">
   <div class="step-line">
     <span class="now"><span class="num" id="stepNum">Step 01</span><span class="ttl" id="stepTitle"></span></span>
-    <span class="count" id="stepIndicator">01 / 12</span>
+    <span class="count" id="stepIndicator">01 / 13</span>
   </div>
   <div class="bar"><div class="fill" id="progressFill"></div></div>
 </div>
@@ -432,8 +439,8 @@
       <nav>
         <button id="resetBtn">Start Over</button>
         <div class="btn-group">
-          <button id="prevBtn">← Back</button>
-          <button id="nextBtn" class="primary">Next →</button>
+          <button id="prevBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Back</button>
+          <button id="nextBtn" class="primary">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
         </div>
       </nav>
     </div>
@@ -455,11 +462,16 @@ const ELEMENTS = {
   15:{s:'P',n:'Phosphorus',m:30.974}, 16:{s:'S',n:'Sulfur',m:32.06},
   17:{s:'Cl',n:'Chlorine',m:35.45}, 18:{s:'Ar',n:'Argon',m:39.948},
   19:{s:'K',n:'Potassium',m:39.098}, 20:{s:'Ca',n:'Calcium',m:40.078},
-  26:{s:'Fe',n:'Iron',m:55.845}, 29:{s:'Cu',n:'Copper',m:63.546},
-  35:{s:'Br',n:'Bromine',m:79.904}, 38:{s:'Sr',n:'Strontium',m:87.62},
-  56:{s:'Ba',n:'Barium',m:137.327}
+  26:{s:'Fe',n:'Iron',m:55.845}, 29:{s:'Cu',n:'Copper',m:63.546,mn:63},
+  35:{s:'Br',n:'Bromine',m:79.904,mn:79}, 38:{s:'Sr',n:'Strontium',m:87.62},
+  56:{s:'Ba',n:'Barium',m:137.327,mn:138}
 };
+// mass number of the most common isotope (round(Ar) is wrong for Cu, Br, Ba)
+const massNum = z => ELEMENTS[z].mn ?? Math.round(ELEMENTS[z].m);
+// real shell configurations past z=20, where the simple 2,8,8,2 fill breaks down
+const SHELLS_HEAVY = { 26:[2,8,14,2], 29:[2,8,18,1], 35:[2,8,18,7], 38:[2,8,18,8,2], 56:[2,8,18,18,8,2] };
 function shellsFor(z) {
+  if (SHELLS_HEAVY[z]) return SHELLS_HEAVY[z].slice();
   const caps = [2, 8, 8, 2];
   const out = [];
   let rem = z;
@@ -514,6 +526,15 @@ function wavelengthToRGB(wl) {
 }
 // one shared wavelength -> color name so every step agrees
 const colorName = wl => wl<430?'violet':wl<480?'blue':wl<510?'blue-green':wl<565?'green':wl<590?'yellow':wl<625?'orange':'red';
+// one shared set of Lucide line icons (never glyph arrows) for buttons and status lines
+const icn = (path, size=14, sw=2) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+const ICON = {
+  right: icn('<path d="m9 18 6-6-6-6"/>'),
+  up: icn('<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>'),
+  down: icn('<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>'),
+  upSm: icn('<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>', 11, 2.5),
+  downSm: icn('<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>', 11, 2.5)
+};
 
 // =====================================================
 //  Animation loop (current scene may register a tick)
@@ -534,7 +555,7 @@ requestAnimationFrame(loop);
 //  Shells are clickable rings, but electrons buzz around
 //  sporadically (probability cloud), not on clean orbits.
 // =====================================================
-const RADII = [46, 82, 118, 154];
+const RADII = [46, 82, 118, 154, 190, 226, 262];
 
 function drawNucleus(ctx, cx, cy, protons, neutrons) {
   const ng = ctx.createRadialGradient(cx-6, cy-6, 2, cx, cy, 32);
@@ -549,9 +570,9 @@ function drawNucleus(ctx, cx, cy, protons, neutrons) {
 }
 
 class ElectronCloud {
-  constructor(cx, cy) { this.cx = cx; this.cy = cy; this.shells = [[],[],[],[]]; }
+  constructor(cx, cy, nShells = 4) { this.cx = cx; this.cy = cy; this.shells = Array.from({length: nShells}, () => []); }
   setCounts(counts) {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < this.shells.length; i++) {
       const want = counts[i] || 0;
       const arr = this.shells[i];
       while (arr.length < want) arr.push({
@@ -566,7 +587,7 @@ class ElectronCloud {
   }
   update(dt) {
     const f = dt * 0.06;
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < this.shells.length; i++) {
       const dir = (i % 2) ? -1 : 1;
       // Pull from the nucleus weakens outward (distance + shielding by inner shells),
       // so inner electrons are held tight and wander little; outer ones roam more.
@@ -587,7 +608,7 @@ class ElectronCloud {
   draw(ctx, opts={}) {
     const occ = this.occupiedShell();
     // cloud bands + dashed clickable ring guides
-    if (opts.rings !== false) for (let i = 0; i < 4; i++) {
+    if (opts.rings !== false) for (let i = 0; i < this.shells.length; i++) {
       if (!this.shells[i].length) continue;
       const r = RADII[i];
       const isVal = opts.valence && i === occ;
@@ -608,7 +629,7 @@ class ElectronCloud {
       ctx.setLineDash([]);
     }
     // electrons (with fading buzz trail)
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < this.shells.length; i++) {
       const r = RADII[i];
       const isVal = opts.valence && i === occ;
       const core = isVal ? '#a855f7' : '#6366f1';
@@ -628,7 +649,7 @@ class ElectronCloud {
         g.addColorStop(0, `rgba(${glow},0.6)`); g.addColorStop(1, `rgba(${glow},0)`);
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, 12, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = core; ctx.beginPath(); ctx.arc(ex, ey, 5.5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.font = '700 8px Roboto Mono, monospace';
+        ctx.fillStyle = '#fff'; ctx.font = '700 9px Roboto Mono, monospace';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('-', ex, ey);
       }
@@ -645,7 +666,7 @@ const scenes = [];
 // ---- Step 1: Bridge from the Flame Test Lab ----
 scenes.push({
   step: 'Step 1: From the Flame Test Lab',
-  seeLabel: 'Flame test → atom',
+  seeLabel: 'From flame test to atom',
   heading: 'Step 1: What Happened in the Lab',
   notes: "You just ran the <strong>flame test lab</strong>, where every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong> circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> bumps an outer electron up, then it <strong>falls back</strong> and releases that energy as light, a <strong>photon</strong>. How far it falls sets the color, so each element emits its own <strong>signature color</strong>.",
   notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch one outer electron absorb the heat, jump up a level, then fall back down and release light, and record the color. Then, <strong>before you read the notes</strong>, predict in one sentence why each metal ion makes a different color, and check it against the notes.",
@@ -663,8 +684,9 @@ scenes.push({
     const CX = 190, CY = 156, FLX = 452, FLY = 286;
     const { c, ctx } = makeCanvas(stage, 520, 312);
     const ease = x => x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2;
-    const cloud = new ElectronCloud(CX, CY);
-    const S = 0.72;   // scale the atom so the excited level fits above the outer shell
+    const cloud = new ElectronCloud(CX, CY, 6);
+    // scale the atom so the excited level fits above the outer shell, whatever the shell count
+    const sFor = z => Math.min(0.72, 140 / RADII[shellsFor(z).length]);
     let phase = 'rest', t = 0, burn = 0, excite = 0, photon = null;
     function drawFlame(bx,by,col,bright,time){
       ctx.fillStyle='#44403c'; roundRect(ctx,bx-20,by,40,26,4); ctx.fill();
@@ -683,18 +705,19 @@ scenes.push({
       }
       ctx.globalAlpha=1;
     }
-    const status = el('div',{style:'font-family:var(--font-sans);font-size:14.5px;font-weight:600;color:var(--textPrimary);text-align:center;min-height:22px;line-height:1.45'});
+    const status = el('div',{class:'status-line'});
     function restStatus(){ const f=ions[active]; status.innerHTML = `<strong style="color:${f.col}">${ELEMENTS[f.z].n}</strong> burns ${f.name} (${f.wl} nm). Press <strong>Heat the flame</strong>.`; }
     const chips = el('div',{class:'tool-row'}, Object.keys(ions).map(k => el('button',{
       class:'chip'+(k===active?' active':''), 'data-k':k,
       onclick(){ active=k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',ch.dataset.k===k)); phase='rest'; t=0; burn=0; excite=0; photon=null; restStatus(); }
     }, k)));
-    const heatBtn = el('button',{class:'primary'},'Heat the flame ↑');
+    const heatBtn = el('button',{class:'primary',html:'Heat the flame '+ICON.up});
     heatBtn.addEventListener('click',()=>{ if(phase==='rest'){ phase='rising'; t=0; } });
     currentTick = (dt) => {
       const f=ions[active], time=performance.now();
       ctx.clearRect(0,0,c.width,c.height);
-      const RAD=[46,82,118,154,190]; const occ = shellsFor(f.z).length-1, outerR = RAD[occ], destR = RAD[occ+1];
+      const S = sFor(f.z);
+      const occ = shellsFor(f.z).length-1, outerR = RADII[occ], destR = RADII[occ+1];
 
       // excite -> hold -> heat removed -> fall -> emit
       if(phase==='rising'){ t=Math.min(1,t+dt/650); excite=ease(t); status.textContent='Heat on: an outer electron absorbs energy and jumps up a level.'; if(t>=1){phase='excited';t=0;} }
@@ -712,12 +735,12 @@ scenes.push({
       ctx.save(); ctx.translate(CX,CY); ctx.scale(S,S); ctx.translate(-CX,-CY);
       // all shells drawn up front (occupied + the next empty one) so NOTHING new appears on heat;
       // the valence shell glows purple, the empty destination brightens as the electron rises into it
-      for(let i=0;i<=occ+1;i++){ const r=RAD[i]; if(!r) continue;
+      for(let i=0;i<=occ+1;i++){ const r=RADII[i]; if(!r) continue;
         const isDest=i===occ+1, isVal=i===occ;
         const a = isDest ? (0.20+0.5*excite) : isVal ? 0.5 : 0.32;
         ctx.strokeStyle = isVal ? `rgba(168,85,247,${a})` : `rgba(99,102,241,${a})`;
         ctx.setLineDash([3,7]); ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(CX,CY,r,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
-      drawNucleus(ctx,CX,CY,f.z, f.n ?? (Math.round(ELEMENTS[f.z].m)-f.z));
+      drawNucleus(ctx,CX,CY,f.z, f.n ?? (massNum(f.z)-f.z));
       // during the cycle, lift one valence electron out of the cloud so it can be the hot one
       const counts = shellsFor(f.z).slice();
       const animating = phase!=='rest';
@@ -751,7 +774,7 @@ scenes.push({
       heatBtn.disabled = phase!=='rest' || !!photon;
     };
     stage.append(chips, el('div',{class:'tool-row',style:'margin-top:2px'},[heatBtn]), status,
-      el('div',{class:'caption'},"Match your unknown's flame color to one of these to identify it."));
+      el('div',{class:'caption'},"One signature color per element. Later, at the flame-test bench, you will use these colors to name your unknown."));
     restStatus();
   }
 });
@@ -776,19 +799,24 @@ scenes.push({
     const minus = el('button', { class:'stepper-btn' }, '−');
     const plus = el('button', { class:'stepper-btn' }, '+');
     const sliderRow = el('div', { class:'slider-row' }, [minus, slider, plus]);
+    // steppers walk only the atomic numbers that exist in ELEMENTS, so a lab-metal
+    // jump (Cu 29, Sr 38, Ba 56) can never step onto a missing element and freeze
+    const KEYS = Object.keys(ELEMENTS).map(Number).sort((a,b)=>a-b);
     function render() {
-      const e = ELEMENTS[z]; const mass = Math.round(e.m); const neut = mass - z;
+      const e = ELEMENTS[z]; const mass = massNum(z); const neut = mass - z;
       symWrap.innerHTML = `<span class="ns-stack"><span class="ns-mass">${mass}</span><span class="ns-num">${z}</span></span><span class="ns-sym">${e.s}</span>`;
       name.textContent = e.n;
       pCell.querySelector('.big').textContent = z;
       nCell.querySelector('.big').textContent = neut;
       mCell.querySelector('.big').textContent = mass;
+      slider.value = Math.min(20, z);
+      slider.disabled = z > 20;
     }
     slider.addEventListener('input', () => { z = +slider.value; render(); });
-    minus.addEventListener('click', () => { z = Math.max(1, z-1); slider.value = z; render(); });
-    plus.addEventListener('click', () => { z = Math.min(20, z+1); slider.value = z; render(); });
+    minus.addEventListener('click', () => { const i = KEYS.indexOf(z); if (i > 0) z = KEYS[i-1]; render(); });
+    plus.addEventListener('click', () => { const i = KEYS.indexOf(z); if (i < KEYS.length-1) z = KEYS[i+1]; render(); });
     const labZ = [11,19,20,29,38,56];
-    const labChips = el('div', { class:'tool-row', style:'margin-top:4px' }, labZ.map(a => el('button', { type:'button', class:'chip', onclick(){ z=a; slider.value=Math.min(20,a); render(); } }, ELEMENTS[a].s)));
+    const labChips = el('div', { class:'tool-row', style:'margin-top:4px' }, labZ.map(a => el('button', { type:'button', class:'chip', onclick(){ z=a; render(); } }, ELEMENTS[a].s)));
     stage.append(el('div', { class:'lookup' }, [
       el('div', { class:'eyebrow-sm' }, 'Drag to change the atomic number'),
       symWrap, name, grid, sliderRow,
@@ -812,11 +840,11 @@ scenes.push({
     let z = 3;
     let placed = [0,0,0,0];
     const caps = [2,8,8,2];
-    const CX = 260, CY = 166;
-    const { c, ctx } = makeCanvas(stage, 520, 326);
+    const CX = 260, CY = 192;
+    const { c, ctx } = makeCanvas(stage, 520, 384);
     const cloud = new ElectronCloud(CX, CY);
     const status = el('div', { class:'status-line' });
-    const valEl = el('div', { class:'spectrum-readout', style:'font-weight:700;color:var(--accentPurple)' });
+    const valEl = el('div', { class:'status-line', style:'font-weight:700;color:var(--accentPurple);min-height:18px' });
     const chips = el('div', { class:'tool-row' }, atoms.map(a => el('button', {
       type:'button', class: 'chip' + (a===z?' active':''), 'data-z':a,
       onclick(){ z=a; placed=[0,0,0,0]; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', +ch.dataset.z===z)); render(); }
@@ -853,7 +881,7 @@ scenes.push({
     });
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
-      const mass = Math.round(ELEMENTS[z].m);
+      const mass = massNum(z);
       const ns = nShells();
       const fs = fillShell();
       // always-visible shell guides so students aim at a real target, not the abyss
@@ -869,17 +897,20 @@ scenes.push({
       cloud.update(dt);
       cloud.draw(ctx, { valence: true });
       // capacity counts above each shell this element actually uses
-      ctx.font = '700 11px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font = '700 12px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
       for (let i=0;i<ns;i++){
         ctx.fillStyle = (i === fs) ? 'rgba(168,85,247,0.9)' : 'rgba(124,111,90,0.6)';
-        ctx.fillText(`${placed[i]||0}/${caps[i]}`, CX, Math.max(10, CY - RADII[i] - 9));
+        ctx.fillText(`${placed[i]||0}/${caps[i]}`, CX, Math.max(10, CY - RADII[i] - 10));
       }
-      // valence-shell label
+      // valence-shell label: right-aligned inside the left edge with a short leader line to the ring
       const occ = outerOcc();
       if (occ >= 0) {
-        ctx.fillStyle = 'rgba(168,85,247,0.95)'; ctx.font = '700 11px Roboto Mono, monospace';
-        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.fillText('← valence shell', CX + RADII[occ] + 8, CY);
+        const lx = Math.max(96, CX - RADII[occ] - 12);
+        ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(lx + 4, CY); ctx.lineTo(CX - RADII[occ] + 2, CY); ctx.stroke();
+        ctx.fillStyle = 'rgba(168,85,247,0.95)'; ctx.font = '700 12px Roboto Mono, monospace';
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText('valence shell', lx, CY);
       }
     };
     stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Inner shells fill first; the purple outer shell holds the valence electrons.'));
@@ -893,7 +924,7 @@ scenes.push({
   seeLabel: 'Energy ladder',
   heading: 'Step 4: Energy Comes in Steps',
   notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder; now watch them fall. The rungs are <strong>fixed energy levels</strong> with unequal gaps. The <strong>farther</strong> an electron falls, the <strong>more energy</strong> the light carries: its <strong>wavelength gets shorter</strong> and its <strong>frequency gets higher</strong>, sliding the color from <strong>red toward violet (ROYGBIV)</strong>. A small fall gives long-wavelength, low-frequency <strong>red</strong>; a big fall gives short-wavelength, high-frequency <strong>violet</strong>.",
-  notebook: "Do a <strong>small</strong> fall and a <strong>big</strong> fall. For each, record the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>. Then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
+  notebook: "Before your first Emit, <strong>predict and write</strong>: which fall, small or big, gives the redder light? Then do a <strong>small</strong> fall and a <strong>big</strong> fall. For each, record the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>. Then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 296);
     const NMAX = 5;
@@ -908,9 +939,9 @@ scenes.push({
       const norm = Math.max(0, Math.min(1, (dE - 0.02)/(0.96 - 0.02)));
       return Math.round(680 - norm*270); // 410 violet .. 680 red
     };
-    const up = el('button', { class:'primary' }, 'Absorb (jump up) ↑');
-    const dn1 = el('button', {}, 'Emit: small fall (down 1) ↓');
-    const dnAll = el('button', {}, 'Emit: big fall (to n=1) ↓');
+    const up = el('button', { class:'primary', html:'Absorb (jump up) '+ICON.up });
+    const dn1 = el('button', { html:'Emit: small fall (down 1) '+ICON.down });
+    const dnAll = el('button', { html:'Emit: big fall (to n=1) '+ICON.down });
     function start(to, dir){ if(anim) return; anim = { from: level, to, t:0, dir, wl: dir==='emit'?dropWL(level,to):null }; }
     up.addEventListener('click', () => { if(level<NMAX && !anim) start(level+1,'absorb'); });
     dn1.addEventListener('click', () => { if(level>1 && !anim) start(level-1,'emit'); });
@@ -922,8 +953,6 @@ scenes.push({
     const specWrap = el('div',{style:'margin-top:8px'},[
       el('div',{style:'display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--textWarmMuted);margin-bottom:3px'},[el('span',{},'700 nm · low f · red'), el('span',{},'violet · high f · 400 nm')]),
       bar ]);
-    const inquiry = el('div',{class:'caption',style:'margin-top:8px;padding:9px 12px;font-size:11.5px;border:1px solid rgba(168,85,247,0.35);border-radius:10px;background:rgba(168,85,247,0.06);text-align:left;line-height:1.45'});
-    inquiry.innerHTML = '<strong style="color:var(--accentPurple)">Inquiry:</strong> Do several jumps, some small and some big. As the electron falls a <strong>greater distance</strong>, watch the wave: what happens to the <strong>wavelength</strong>, to the <strong>frequency</strong> (how fast it wiggles), and which way does the color slide along <strong>ROYGBIV</strong>? Write the pattern before you move on.';
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
       // ----- energy ladder (left) -----
@@ -951,12 +980,12 @@ scenes.push({
           if (anim.dir === 'emit') {
             prevWL = lastWL; lastWL = anim.wl;
             const dist = anim.from - anim.to, f = (3000/anim.wl).toFixed(1), col2 = wavelengthToRGB(anim.wl);
-            const wlA = prevWL==null?'':(anim.wl<prevWL?' <span style="color:#166534">↓ shorter</span>':anim.wl>prevWL?' <span style="color:#9a3412">↑ longer</span>':' = same');
-            const fA  = prevWL==null?'':(anim.wl<prevWL?' <span style="color:#166534">↑ higher</span>':anim.wl>prevWL?' <span style="color:#9a3412">↓ lower</span>':' = same');
-            status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10<span style="font-size:0.72em;vertical-align:0.4em">14</span> Hz</strong>${fA} ·<strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
+            const wlA = prevWL==null?'':(anim.wl<prevWL?` <span style="color:#166534">${ICON.downSm} shorter</span>`:anim.wl>prevWL?` <span style="color:#9a3412">${ICON.upSm} longer</span>`:' = same');
+            const fA  = prevWL==null?'':(anim.wl<prevWL?` <span style="color:#166534">${ICON.upSm} higher</span>`:anim.wl>prevWL?` <span style="color:#9a3412">${ICON.downSm} lower</span>`:' = same');
+            status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10<span style="font-size:0.72em;vertical-align:0.4em">14</span> Hz</strong>${fA} · <strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
             marker.style.left = Math.max(0,Math.min(100,(700-anim.wl)/300*100)) + '%';
           } else {
-            status.innerHTML = `Absorbed a photon → now in <strong>n=${level}</strong>. Higher rung, more energy stored, ready to fall.`;
+            status.innerHTML = `Absorbed a photon: now in <strong>n=${level}</strong>. Higher rung, more energy stored, ready to fall.`;
           }
           anim = null;
         }
@@ -981,7 +1010,7 @@ scenes.push({
         ctx.fillText('one wavelength (λ)', (bx0+bx1)/2, by+3);
       } else {
         ctx.fillStyle='#A0937B'; ctx.font='italic 12px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('Emit to see the light wave →', (WX0+WX1)/2, WY);
+        ctx.fillText('Emit to see the light wave', (WX0+WX1)/2, WY);
       }
       // ----- electron on the ladder -----
       const ex=EX, ey=curY;
@@ -990,7 +1019,7 @@ scenes.push({
       ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(ex,ey,10,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#fff'; ctx.font='700 11px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('e⁻', ex, ey);
     };
-    stage.append(el('div',{class:'tool-row'},[up,dn1,dnAll]), status, specWrap, inquiry);
+    stage.append(el('div',{class:'tool-row'},[up,dn1,dnAll]), status, specWrap);
   }
 });
 
@@ -1042,7 +1071,7 @@ scenes.push({
         const wl = lines[fr]; const x = wlToX(wl); const col = wavelengthToRGB(wl);
         ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.shadowColor=col; ctx.shadowBlur=12;
         ctx.beginPath(); ctx.moveTo(x,sy+8); ctx.lineTo(x,sy+sh-8); ctx.stroke(); ctx.shadowBlur=0;
-        ctx.fillStyle=col; ctx.font='700 9px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillStyle=col; ctx.font='700 10px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='top';
         ctx.fillText(fr+'→2', x, sy+sh+3);
       });
       ctx.fillStyle='#57534E'; ctx.font='600 11px Inter'; ctx.textAlign='center'; ctx.textBaseline='top';
@@ -1113,7 +1142,7 @@ scenes.push({
       ctx.fillStyle='#000'; roundRect(ctx,sx,sy,sw,sh,6); ctx.fill();
       f.lines.forEach(wl=>{ const x=sx+(Math.min(700,Math.max(400,wl))-400)/300*sw; const col=wavelengthToRGB(Math.min(700,Math.max(400,wl)));
         ctx.strokeStyle=col; ctx.lineWidth=3; ctx.shadowColor=col; ctx.shadowBlur=8; ctx.beginPath(); ctx.moveTo(x,sy+6); ctx.lineTo(x,sy+sh-6); ctx.stroke(); ctx.shadowBlur=0; });
-      ctx.fillStyle='#A0937B'; ctx.font='700 9px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillStyle='#A0937B'; ctx.font='700 10px Roboto Mono'; ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.fillText('emission lines', sx+sw/2, sy+sh+6);
       ctx.fillStyle='#fff'; ctx.font='700 22px Roboto Serif, serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
       ctx.fillText(active, 90, 70);
@@ -1124,47 +1153,78 @@ scenes.push({
   }
 });
 
-// ---- Step 7: Isotopes vs Ions ----
+// ---- Step 7: Isotopes ----
 scenes.push({
-  step: 'Step 7: Isotopes vs. Ions',
-  seeLabel: 'Isotope & ion explorer',
-  heading: 'Step 7: Isotopes vs. Ions',
-  notes: "<strong>Isotopes</strong> have the same number of protons but different numbers of <strong>neutrons</strong> (Carbon-12 vs Carbon-13). <strong>Ions</strong> form by gaining or losing <strong>electrons</strong>. <strong>Cations</strong> are positive (lost electrons); <strong>anions</strong> are negative (gained electrons).",
-  notebook: "Make one isotope and one ion in the tool. Write what changed in each: <strong>neutrons</strong> for the isotope, <strong>electrons</strong> for the ion.",
+  step: 'Step 7: Isotopes',
+  seeLabel: 'Isotope explorer',
+  heading: 'Step 7: Isotopes',
+  notes: "<strong>Isotopes</strong> are atoms of the same element with the same number of <strong>protons</strong> but different numbers of <strong>neutrons</strong>. Carbon-12, carbon-13, and carbon-14 all have 6 protons, so all three are carbon. Only the neutron count changes, so only the <strong>mass number</strong> changes: 12, 13, 14.",
+  notebook: "Before you click, <strong>predict</strong>: which particle count changes from C-12 to C-14, and does the atom stop being carbon? Click all three isotopes and check. Then <strong>draw</strong> the three nuclei side by side, label the protons and neutrons in each, and <strong>write</strong> each mass number.",
   build(stage) {
-    const { c, ctx } = makeCanvas(stage, 600, 300);
-    // left atom = isotope of carbon, right atom = ion of sodium
+    const { c, ctx } = makeCanvas(stage, 520, 260);
     let neutrons = 6;   // C: 6 (C-12) or 7 (C-13) or 8 (C-14)
-    let charge = 0;     // Na ion charge: -1,0,+1
-    const CXc = 165, CXn = 440, CY = 140;
-    const cloudC = new ElectronCloud(CXc, CY);
-    const cloudN = new ElectronCloud(CXn, CY);
+    const CX = 260, CY = 130;
+    const cloud = new ElectronCloud(CX, CY);
     const isoBtns = el('div',{class:'tool-row'}, [6,7,8].map(nv => el('button',{type:'button',class:'chip'+(nv===neutrons?' active':''),'data-n':nv,
       onclick(){ neutrons=nv; isoBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.n===nv)); render(); }}, `C-${6+nv}`)));
-    const ionBtns = el('div',{class:'tool-row'}, [['+1',1],['0',0],['−1',-1]].map(([lab,cv]) => el('button',{type:'button',class:'chip'+(cv===charge?' active':''),'data-c':cv,
-      onclick(){ charge=cv; ionBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.c===cv)); render(); }}, `Na ${lab}`)));
-    const readout = el('div',{style:'font-family:var(--font-sans);font-size:14px;font-weight:600;color:var(--textPrimary);text-align:center;line-height:1.55'});
+    const readout = el('div',{class:'status-line'});
     function render(){
-      const ionDesc = charge===0?'neutral atom':charge>0?'cation, lost 1 electron':'anion, gained 1 electron';
-      const sym = charge===0 ? '' : `<sup style="font-size:0.68em;font-weight:700;color:#b45309">${charge>0?'+':'−'}</sup>`;
-      readout.innerHTML =
-        `<div><strong style="color:var(--accentBlue)">Isotope</strong> · Carbon-${6+neutrons}: 6 protons, ${neutrons} neutrons</div>` +
-        `<div><strong style="color:#b45309">Ion</strong> · Na${sym}: ${ionDesc}</div>`;
+      readout.innerHTML = `<strong style="color:var(--accentBlue)">Carbon-${6+neutrons}</strong>: 6 protons, ${neutrons} neutrons, mass number ${6+neutrons}. Still carbon.`;
     }
     currentTick = (dt) => {
       ctx.clearRect(0,0,c.width,c.height);
-      drawNucleus(ctx, CXc, CY, 6, neutrons);
-      cloudC.setCounts(shellsFor(6)); cloudC.update(dt); cloudC.draw(ctx, { valence: true });
-      drawNucleus(ctx, CXn, CY, 11, 12);
-      cloudN.setCounts(shellsFor(11 - charge)); cloudN.update(dt); cloudN.draw(ctx, { valence: true }); // electrons = 11 - charge
-      ctx.fillStyle='#7C6F5A'; ctx.font='700 12px Roboto Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('ISOTOPE · neutrons change', CXc, 286);
-      ctx.fillText('ION · electrons change', CXn, 286);
+      drawNucleus(ctx, CX, CY, 6, neutrons);
+      cloud.setCounts(shellsFor(6)); cloud.update(dt); cloud.draw(ctx, { valence: true });
     };
     stage.append(
       el('div',{class:'eyebrow-sm',style:'text-align:center'},'Change the carbon isotope'), isoBtns,
-      el('div',{class:'eyebrow-sm',style:'text-align:center'},'Change the sodium ion'), ionBtns,
-      readout);
+      readout,
+      el('div',{class:'caption'},'Same protons, same element. Only the neutrons, and so the mass, change.'));
+    render();
+  }
+});
+
+// ---- Step 8: Ions ----
+scenes.push({
+  step: 'Step 8: Ions',
+  seeLabel: 'Ion explorer',
+  heading: 'Step 8: Ions',
+  notes: "<strong>Ions</strong> form when an atom gains or loses <strong>electrons</strong> to reach a <strong>full outer shell</strong>. Sodium (2, 8, 1) loses its 1 valence electron and becomes a <strong>cation</strong>, Na<sup style=\"font-size:0.68em\">+</sup>, positive. Chlorine (2, 8, 7) gains 1 electron and becomes an <strong>anion</strong>, Cl<sup style=\"font-size:0.68em\">−</sup>, negative.",
+  notebook: "Before you click, <strong>predict</strong>: why would sodium give up exactly 1 electron? (Look at its shells: 2, 8, 1.) Make <strong>Na<sup style=\"font-size:0.68em\">+</sup></strong> and <strong>Cl<sup style=\"font-size:0.68em\">−</sup></strong>, count the electrons in each, and <strong>record</strong> what was lost or gained and the charge left behind.",
+  build(stage) {
+    const { c, ctx } = makeCanvas(stage, 520, 312);
+    const states = [
+      { k:'Na',  z:11, chg:0,  label:'Na' },
+      { k:'Na+', z:11, chg:1,  html:'Na<sup style="font-size:0.75em">+</sup>' },
+      { k:'Cl',  z:17, chg:0,  label:'Cl' },
+      { k:'Cl-', z:17, chg:-1, html:'Cl<sup style="font-size:0.75em">−</sup>' }
+    ];
+    let active = 'Na';
+    const CX = 260, CY = 156;
+    const cloud = new ElectronCloud(CX, CY);
+    const chips = el('div',{class:'tool-row'}, states.map(st => el('button',{type:'button',class:'chip'+(st.k===active?' active':''),'data-k':st.k,
+      html: st.html || st.label,
+      onclick(){ active=st.k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',ch.dataset.k===active)); render(); }})));
+    const readout = el('div',{class:'status-line'});
+    const cur = () => states.find(st => st.k===active);
+    function render(){
+      const st = cur(), e = ELEMENTS[st.z], electrons = st.z - st.chg, sh = shellsFor(electrons).join(', ');
+      const sym = st.chg===0 ? '' : `<sup style="font-size:0.68em;font-weight:700;color:${st.chg>0?'var(--cation)':'var(--anion)'}">${st.chg>0?'+':'−'}</sup>`;
+      const desc = st.chg===0 ? `neutral atom, ${st.z} protons, ${electrons} electrons (${sh})`
+        : st.chg>0 ? `<strong style="color:var(--cation)">cation</strong>, lost 1 electron: ${st.z} protons, ${electrons} electrons (${sh}), full outer shell`
+        : `<strong style="color:var(--anion)">anion</strong>, gained 1 electron: ${st.z} protons, ${electrons} electrons (${sh}), full outer shell`;
+      readout.innerHTML = `<strong>${e.s}${sym}</strong>: ${desc}`;
+    }
+    currentTick = (dt) => {
+      ctx.clearRect(0,0,c.width,c.height);
+      const st = cur();
+      drawNucleus(ctx, CX, CY, st.z, massNum(st.z) - st.z);
+      cloud.setCounts(shellsFor(st.z - st.chg)); cloud.update(dt); cloud.draw(ctx, { valence: true }); // electrons = protons - charge
+    };
+    stage.append(
+      el('div',{class:'eyebrow-sm',style:'text-align:center'},'Build each atom and ion'), chips,
+      readout,
+      el('div',{class:'caption'},'Metals lose their few valence electrons; nonmetals gain electrons to fill the shell.'));
     render();
   }
 });
@@ -1184,10 +1244,12 @@ scenes.push({
       { sym:'O',  z:8,  mass:16, charge:-2 },
       { sym:'Ca', z:20, mass:40, charge:2 }
     ];
+    // symbol superscripts use chemistry notation (number then sign: 2−); prose charges stay sign-first (+2, −1)
     const chgStr = c => c>0 ? '+'+c : c<0 ? '−'+Math.abs(c) : '';
+    const symStr = c => c===0 ? '' : (Math.abs(c)>1 ? Math.abs(c) : '') + (c>0 ? '+' : '−');
     const ionHTML = r => `<sup style="font-size:0.55em;font-weight:700;color:var(--textWarmMuted);margin-right:2px">${r.mass}</sup>${r.sym}` +
-      (r.charge ? `<sup style="font-size:0.55em;font-weight:700;margin-left:2px;color:${r.charge>0?'#b45309':'#4f46e5'}">${chgStr(r.charge)}</sup>` : '');
-    const ionText = r => `${r.mass}${r.sym} (${chgStr(r.charge)})`;
+      (r.charge ? `<sup style="font-size:0.55em;font-weight:700;margin-left:2px;color:${r.charge>0?'var(--cation)':'var(--anion)'}">${symStr(r.charge)}</sup>` : '');
+    const ionText = r => `${r.mass}${r.sym} (charge ${chgStr(r.charge)})`;
     const tbl = el('table', { class:'counter' });
     tbl.append(el('tr',{},[el('th',{},'Ion'),el('th',{},'Protons'),el('th',{},'Neutrons'),el('th',{},'Electrons')]));
     rows.forEach(r => {
@@ -1210,7 +1272,7 @@ scenes.push({
   step: 'Step 9: Relative Atomic Mass (Aᵣ)',
   seeLabel: 'Aᵣ calculator',
   heading: 'Step 9: Relative Atomic Mass',
-  notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, add the results, then divide by the total abundance (usually 1.00 or 100).",
+  notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, then add the results. (If you keep the abundances as percents, divide the sum by 100 instead.)",
   notebook: "Before you calculate, <strong>predict</strong>: copper is ~69% mass-63 and ~31% mass-65, so will its average mass sit closer to 63 or to 65? Run it and check, then copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.",
   build(stage) {
     const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any'}); return el('div',{class:'field'},[el('label',{},lab),i]); };
@@ -1327,10 +1389,6 @@ scenes.push({
   build(stage) {
     const APP = 'Atomic Structure';
     const TEACHER_CODE = 'sparky2026'; // change to your own passcode; open the app with ?teacher=1 to reveal the Clear button
-    stage.append(el('div',{class:'summary-card',style:'border-left-color:var(--accentBlue)'},[
-      el('div',{class:'sc-tag',style:'color:var(--accentBlue)'},'Launch the next lesson'),
-      el('p',{},'Keep your questions in your notebook, then submit them here. They appear below for the whole class, and the word cloud shows what we are all wondering.')
-    ]));
     const inS = 'font-family:var(--font-sans);font-size:14px;padding:9px 12px;border:1px solid var(--borderColor);border-radius:9px;background:#fff;color:var(--textPrimary)';
     const name = el('input',{type:'text',placeholder:'Your name',style:inS+';flex:2;min-width:0'});
     const klass = el('input',{type:'text',placeholder:'Class / period',style:inS+';flex:1;min-width:0'});
@@ -1341,34 +1399,39 @@ scenes.push({
       wrap.append(el('div',{style:'display:flex;align-items:center;gap:10px'},[ el('div',{class:'q-num',style:'min-width:20px'},(i+1)+'.'), inp ])); }
     stage.append(wrap);
     const btn = el('button',{class:'primary',style:'margin-top:2px'},'Submit my questions');
-    const msg = el('div',{class:'pb-text'});
+    const msg = el('div',{class:'status-line',style:'text-align:left;min-height:0'});
     stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[btn, msg]));
 
-    // live class feed + word cloud
-    const feed = el('div',{style:'flex:1;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:#fff'});
-    const cloud = el('div',{style:'flex:1;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:var(--bgMain);padding:10px;text-align:center;align-content:center'});
+    // live class feed + word cloud (wraps to stacked panels on narrow/embedded viewports)
+    const feed = el('div',{style:'flex:1 1 240px;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:#fff'});
+    const cloud = el('div',{style:'flex:1 1 240px;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:var(--bgMain);padding:10px;text-align:center;align-content:center'});
     stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'What the class is wondering'));
-    stage.append(el('div',{style:'display:flex;gap:12px;margin-top:6px'},[feed, cloud]));
+    stage.append(el('div',{style:'display:flex;flex-wrap:wrap;gap:12px;margin-top:6px'},[feed, cloud]));
 
     // teacher-only clear: remembered per-device. Open once with ?teacher=1 to flag this computer
     // (?teacher=0 un-flags it). After that the button appears automatically here; passcode still required.
+    // ?teacher=1 works live (not only via the stored flag) because localStorage is
+    // partitioned inside cross-origin iframes; native prompt()/confirm() dialogs are
+    // suppressed there too, so the passcode + confirm live inline in the DOM.
     const tParam = new URLSearchParams(location.search).get('teacher');
     if (tParam === '1') { try { localStorage.setItem('classq_teacher','1'); } catch(e){} }
     if (tParam === '0') { try { localStorage.removeItem('classq_teacher'); } catch(e){} }
-    let isTeacher = false; try { isTeacher = localStorage.getItem('classq_teacher') === '1'; } catch(e){}
+    let isTeacher = tParam === '1';
+    if (tParam !== '0') { try { isTeacher = isTeacher || localStorage.getItem('classq_teacher') === '1'; } catch(e){} }
     if (isTeacher) {
-      const clearBtn = el('button',{style:'margin-top:10px;font-size:12px;padding:7px 12px;color:var(--accentRed);border:1px solid var(--borderColor);background:#fff'},'Clear all questions (teacher)');
+      const tCode = el('input',{type:'password',placeholder:'Teacher passcode',style:inS+';max-width:190px'});
+      const clearBtn = el('button',{style:'font-size:12px;padding:7px 12px;color:var(--accentRed);border:1px solid var(--borderColor);background:#fff'},'Clear all questions (teacher)');
+      const tMsg = el('div',{class:'status-line',style:'text-align:left;min-height:0;font-size:12px'});
+      let armed = false;
       clearBtn.addEventListener('click', async () => {
-        const code = prompt('Teacher passcode to clear all questions:');
-        if (code === null) return;
-        if (code !== TEACHER_CODE) { alert('Wrong passcode.'); return; }
-        if (!confirm('Clear ALL submitted questions for this app? This cannot be undone.')) return;
+        if (tCode.value !== TEACHER_CODE) { tMsg.textContent = 'Wrong passcode.'; armed = false; return; }
+        if (!armed) { armed = true; tMsg.textContent = ''; clearBtn.textContent = 'Click again to clear ALL questions'; return; }
         clearBtn.disabled = true; clearBtn.textContent = 'Clearing...';
         try { await window.ClassQ.clear(APP); clearBtn.textContent = 'Cleared'; }
-        catch(e){ alert('Could not clear, try again.'); }
-        setTimeout(() => { clearBtn.disabled = false; clearBtn.textContent = 'Clear all questions (teacher)'; }, 1500);
+        catch(e){ tMsg.textContent = 'Could not clear, try again.'; }
+        setTimeout(() => { armed = false; clearBtn.disabled = false; clearBtn.textContent = 'Clear all questions (teacher)'; }, 1500);
       });
-      stage.append(clearBtn);
+      stage.append(el('div',{style:'display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap'},[tCode, clearBtn]), tMsg);
     }
 
     const STOP = new Set('the a an is are do does of to in on and or why what how when it they that this for with as be can will if so i we you my me their there not have has was were which at by from more than into out up down one two all some about us our your his her also it’s'.split(' '));
@@ -1397,7 +1460,7 @@ scenes.push({
       const qs = inputs.map(i=>i.value.trim()).filter(Boolean);
       if(!name.value.trim() || !klass.value.trim()){ msg.textContent='Add your name and class first.'; msg.classList.remove('complete'); return; }
       if(!qs.length){ msg.textContent='Type at least one question first.'; msg.classList.remove('complete'); return; }
-      if(qs.some(q=>BAD.test(q))){ msg.textContent='Keep it school-appropriate, please.'; msg.classList.remove('complete'); return; }
+      if(BAD.test(name.value) || BAD.test(klass.value) || qs.some(q=>BAD.test(q))){ msg.textContent='Keep it school-appropriate, please.'; msg.classList.remove('complete'); return; }
       btn.disabled=true; btn.textContent='Submitting...'; msg.textContent='';
       try {
         if(!window.ClassQ) throw new Error('offline');
@@ -1414,11 +1477,12 @@ scenes.push({
 
 // =====================================================
 //  Reorder into the streamlined teaching flow:
-//  1 segue from lab · 2 Bohr model + flame analysis · 3 atomic number/mass
-//  · 4 isotope formulas · 5 relative abundance · practice · your questions
+//  1 lab segue · 2 Bohr shells · 3 energy ladder · 4 Balmer · 5 flame bench
+//  · 6 identity · 7 isotopes · 8 ions · 9 particle counter · 10 Ar
+//  · 11 abundance walkthrough · 12 practice · 13 your questions
 // =====================================================
 ;(function(){
-  const flow = [0, 2, 3, 4, 5, 1, 6, 7, 8, 9, 10, 11];
+  const flow = [0, 2, 3, 4, 5, 1, 6, 7, 8, 9, 10, 11, 12];
   const ordered = flow.map(i => scenes[i]).filter(Boolean);
   if (ordered.length === scenes.length) { scenes.length = 0; scenes.push(...ordered); }
 })();
@@ -1458,7 +1522,7 @@ function setScene(i) {
   progressFill.style.width = ((i+1)/scenes.length*100) + '%';
   prevBtn.disabled = i === 0;
   nextBtn.disabled = i === scenes.length-1;
-  nextBtn.textContent = i === scenes.length-1 ? 'Done' : 'Next →';
+  nextBtn.innerHTML = i === scenes.length-1 ? 'Done' : 'Next ' + ICON.right;
   s.build(stageEl);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1506,9 +1570,11 @@ async function init(){
       window.ClassQ = {
         mode: 'live',
         async submit(p){ await fs.addDoc(fs.collection(db,'questions'), {app:p.app,name:p.name||'',klass:p.klass||'',questions:p.questions||[],created:Date.now()}); },
-        subscribe(a,cb){ const qy=fs.query(fs.collection(db,'questions'), fs.orderBy('created','desc'), fs.limit(400));
-          return fs.onSnapshot(qy, snap=>{ const list=[]; snap.forEach(d=>{ const v=d.data(); if(v.app===a) list.push(v); }); cb(list); }, ()=>cb([])); },
-        async clear(a){ const snap=await fs.getDocs(fs.collection(db,'questions')); for (const dd of snap.docs){ if(dd.data().app===a) await fs.deleteDoc(fs.doc(db,'questions',dd.id)); } }
+        // filter by app server-side (no orderBy, so no composite index needed; sort client-side)
+        // so other apps' traffic in the shared project can never evict this class's questions
+        subscribe(a,cb){ const qy=fs.query(fs.collection(db,'questions'), fs.where('app','==',a), fs.limit(400));
+          return fs.onSnapshot(qy, snap=>{ const list=[]; snap.forEach(d=>list.push(d.data())); list.sort((x,y)=>(y.created||0)-(x.created||0)); cb(list); }, ()=>cb([])); },
+        async clear(a){ const snap=await fs.getDocs(fs.query(fs.collection(db,'questions'), fs.where('app','==',a))); for (const dd of snap.docs){ await fs.deleteDoc(dd.ref); } }
       };
     } catch(e){ setLocal(); }
   }
