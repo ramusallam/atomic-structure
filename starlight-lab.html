@@ -34,10 +34,6 @@
   table.decoder td.obj{font-weight:600;white-space:nowrap}
   .callout{border:1px solid rgba(79,70,229,0.35);background:var(--indigo-soft);border-radius:10px;padding:10px 13px;font-size:11.5px;line-height:1.5;margin-top:14px;display:flex;gap:9px}
   .callout svg{width:16px;height:16px;stroke:var(--indigo);flex-shrink:0;margin-top:1px}
-  .name-line{text-align:right;font-size:12px;color:var(--warm);margin-bottom:14px}
-  .name-line span{display:inline-block;border-bottom:1px solid var(--ink);width:2.4in;margin-left:6px}
-  .prompt{font-size:12.5px;line-height:1.5;margin:10px 0 6px}
-  .writelines{border-bottom:1px solid var(--line);height:24px}
   table.sheet{width:100%;border-collapse:collapse;margin-top:8px}
   table.sheet th{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--warm-muted);text-align:left;padding:5px 6px;border-bottom:2px solid var(--ink)}
   table.sheet td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -236,13 +232,17 @@
 
 <!-- ============ PAGE 3: STUDENT SHEET ============ -->
 <div class="page">
-  <div class="name-line">Name<span></span></div>
   <div class="eyebrow">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
-    Reading Starlight · Student Sheet
+    Reading Starlight · Workbook Supplement
   </div>
   <h1>You Are the Astronomer</h1>
-  <div class="sub">Six lights. Sketch each fingerprint, name the gas, then decode what you were really looking at. All other writing happens in the lab.</div>
+  <div class="sub">Six lights. Sketch each fingerprint, name the gas, then decode what you were really looking at.</div>
+
+  <div class="callout" style="margin-top:0;margin-bottom:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    <div><strong>Copy this table into your workbook.</strong> This sheet is a reference — recreate the data table below in your workbook and record your sketches, gases, and identifications there. All reflection on the inquiry happens in the module itself.</div>
+  </div>
 
   <table class="sheet">
     <tr><th style="width:0.7in">Star</th><th>Sketch the lines you see (use colored pencils)</th><th style="width:1.05in">Gas</th><th style="width:1.35in">What is it really?</th></tr>
@@ -302,7 +302,7 @@
     </td><td><div class="fill"></div></td><td><div class="fill"></div></td></tr>
   </table>
 
-  <div class="footer">READING STARLIGHT · STUDENT SHEET · FOLLOWS THE ATOMIC STRUCTURE LECTURE (2a)</div>
+  <div class="footer">READING STARLIGHT · WORKBOOK SUPPLEMENT · FOLLOWS THE ATOMIC STRUCTURE LECTURE (2a)</div>
 </div>
 
 </body>
