@@ -773,7 +773,7 @@ scenes.push({
       heatBtn.disabled = phase!=='rest' || !!photon;
     };
     stage.append(chips, el('div',{class:'tool-row',style:'margin-top:2px'},[heatBtn]), status,
-      el('div',{class:'caption'},"One signature color per element. Later, at the flame-test bench, you will use these colors to name your unknown."));
+      el('div',{class:'caption'},"One signature color per element. Later, at the flame-test bench, you will review every color from your lab."));
     restStatus();
   }
 });
@@ -1086,8 +1086,8 @@ scenes.push({
   step: 'Step 6: Flame Tests',
   seeLabel: 'Flame test bench',
   heading: 'Step 6: Flame Tests',
-  notes: "Same physics as the emission spectrum, now across many elements: when heated, each element's electrons emit photons of its own <strong>signature color</strong>. That color is what identifies an <strong>unknown</strong> ion in the lab.",
-  notebook: "<strong>Experience:</strong> test 3 elements at the bench, then find the one whose color matches the <strong>unknown</strong> from your lab.<br><strong>Record:</strong> write each element and its flame color, then <strong>name your unknown</strong>.<br><strong>Confirm:</strong> check against your notes, then add one sentence on why <strong>copper</strong> and <strong>sodium</strong> look different.",
+  notes: "Same physics as the emission spectrum, now across many elements: when heated, each element's electrons emit photons of its own <strong>signature color</strong>. These are the colors you saw at the bench in your lab.",
+  notebook: "<strong>Experience:</strong> click through all six elements and watch each flame.<br><strong>Record:</strong> make a summary table of each element and its flame color, comparing the sim with the colors in your lab notes.<br><strong>Confirm:</strong> flag any element where the sim color and your notes disagree, and add one sentence on why that might be.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 360);
     const flames = {
@@ -1146,7 +1146,7 @@ scenes.push({
       ctx.fillText(active, 90, 70);
       ctx.fillStyle=f.col; ctx.font='600 13px Inter'; ctx.fillText(f.name, 90, 92);
     };
-    stage.append(chips, readout, el('div',{class:'caption'},'Heat excites electrons; the light they emit is the flame color. The color your unknown burned is the one that names it.'));
+    stage.append(chips, readout, el('div',{class:'caption'},'Heat excites electrons; the light they emit is the flame color.'));
     render();
   }
 });
