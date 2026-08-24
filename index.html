@@ -669,7 +669,7 @@ scenes.push({
   seeLabel: 'From flame test to atom',
   heading: 'Step 1: What Happened in the Lab',
   notes: "You just ran the <strong>flame test lab</strong>, where every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong> circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> bumps an outer electron up, then it <strong>falls back</strong> and releases that energy as light, a <strong>photon</strong>. How far it falls sets the color, so each element emits its own <strong>signature color</strong>.",
-  notebook: "Pick the ion you tested in the lab and press <strong>Heat the flame</strong>. Watch one outer electron absorb the heat, jump up a level, then fall back down and release light, and record the color. Then, <strong>before you read the notes</strong>, predict in one sentence why each metal ion makes a different color, and check it against the notes.",
+  notebook: "<strong>Experience:</strong> pick one of the ions you tested in the lab and press <strong>Heat the flame</strong>. Watch one outer electron absorb the heat, jump up a level, then fall back down and release light. Try a second ion.<br><strong>Record:</strong> write each ion and the color it made.<br><strong>Confirm:</strong> check what you saw against your notes, then add one sentence explaining why each metal ion makes a different color.",
   build(stage) {
     const ions = {
       Li:{z:3, col:'#dc2626', name:'crimson red', wl:671},
@@ -677,8 +677,7 @@ scenes.push({
       K:{z:19, col:'#a855f7', name:'lilac', wl:404},
       Ca:{z:20, col:'#f97316', name:'orange-red', wl:622},
       Cu:{z:29, col:'#10b981', name:'blue-green', wl:515, n:34},
-      Sr:{z:38, col:'#ef4444', name:'scarlet red', wl:650},
-      Ba:{z:56, col:'#84cc16', name:'apple green', wl:524, n:82}
+      Sr:{z:38, col:'#ef4444', name:'scarlet red', wl:650}
     };
     let active = 'Na';
     const CX = 190, CY = 156, FLX = 452, FLY = 286;
@@ -785,7 +784,7 @@ scenes.push({
   seeLabel: 'Element identity tool',
   heading: 'Step 2: Atomic Number = Identity',
   notes: "The <strong>atomic number</strong> is the number of <strong>protons</strong>. It is the element's fingerprint: any atom with 6 protons must be carbon. The <strong>mass number</strong> is the number of <strong>protons plus neutrons</strong> in the nucleus.",
-  notebook: "Before you drag, <strong>predict</strong>: going from atomic number 6 to 7, which number (protons, neutrons, or mass) <strong>must</strong> change to make a new element? Drag it and check. Then pick <strong>3 atomic numbers</strong> (try your lab metals below), write each element's name and nuclear symbol, and circle the protons.",
+  notebook: "<strong>Experience:</strong> drag from atomic number 6 to 7 and watch which number changes to make a new element. Then visit <strong>3 atomic numbers</strong> (try your lab metals).<br><strong>Record:</strong> write each element's name and nuclear symbol, and circle the protons.<br><strong>Confirm:</strong> check your symbols against your notes, then add one sentence: which particle count decides an element's identity?",
   build(stage) {
     let z = 6;
     const symWrap = el('div', { class: 'nuclear-symbol' });
@@ -834,7 +833,7 @@ scenes.push({
   seeLabel: 'Bohr model builder',
   heading: 'Step 3: Electron Shells',
   notes: "Electrons live in <strong>shells</strong> (energy levels), not fixed orbits. Shells fill from the inside out: 1st holds <strong>2</strong>, 2nd holds <strong>8</strong>, 3rd holds <strong>8</strong> (first 20 elements). Calcium fills as <strong>2, 8, 8, 2</strong>. The electrons in the <strong>outer shell are the valence electrons</strong>, the ones that form bonds.",
-  notebook: "Build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2). Draw both, label each shell's count, and circle the <strong>valence electrons</strong>. Then <strong>hypothesize</strong>: the outer electrons buzz wider and feel less pull from the nucleus, why? (Hint: count how many electrons sit between the outer electron and the nucleus.)",
+  notebook: "<strong>Experience:</strong> build <strong>Sodium</strong> (2, 8, 1) and <strong>Calcium</strong> (2, 8, 8, 2).<br><strong>Record:</strong> draw both atoms, label each shell's count, and circle the <strong>valence electrons</strong>.<br><strong>Confirm:</strong> using your notes, add one sentence on why the outer electrons feel less pull from the nucleus. (Hint: count how many electrons sit between the outer electron and the nucleus.)",
   build(stage) {
     const atoms = [3,6,8,11,12,17,19,20];
     let z = 3;
@@ -924,7 +923,7 @@ scenes.push({
   seeLabel: 'Energy ladder',
   heading: 'Step 4: Energy Comes in Steps',
   notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder; now watch them fall. The rungs are <strong>fixed energy levels</strong> with unequal gaps. The <strong>farther</strong> an electron falls, the <strong>more energy</strong> the light carries: its <strong>wavelength gets shorter</strong> and its <strong>frequency gets higher</strong>, sliding the color from <strong>red toward violet (ROYGBIV)</strong>. A small fall gives long-wavelength, low-frequency <strong>red</strong>; a big fall gives short-wavelength, high-frequency <strong>violet</strong>.",
-  notebook: "Before your first Emit, <strong>predict and write</strong>: which fall, small or big, gives the redder light? Then do a <strong>small</strong> fall and a <strong>big</strong> fall. For each, record the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>. Then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
+  notebook: "<strong>Experience:</strong> do a <strong>small</strong> fall and a <strong>big</strong> fall with Emit.<br><strong>Record:</strong> for each fall, write the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>.<br><strong>Confirm:</strong> check your data against your notes, then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 296);
     const NMAX = 5;
@@ -1029,7 +1028,7 @@ scenes.push({
   seeLabel: 'Hydrogen spectrum simulator',
   heading: 'Step 5: Emission Spectra',
   notes: "When an excited electron falls to energy level <strong>n = 2</strong>, it releases <strong>visible light</strong>. These transitions are the <strong>Balmer series</strong>. A bigger fall releases bluer light; a smaller fall releases redder light.",
-  notebook: "Before clicking, <strong>predict</strong>: of the four jumps (n = 3, 4, 5, 6 → 2), which lands the <strong>reddest</strong> line and which the most <strong>violet</strong>? Click all four to check, copy the spectrum, and label the red and violet lines.",
+  notebook: "<strong>Experience:</strong> click all four jumps (n = 3, 4, 5, 6 → 2) and watch where each line lands.<br><strong>Record:</strong> copy the spectrum and label the reddest and most violet lines.<br><strong>Confirm:</strong> check against your notes, then add one sentence connecting the size of the fall to the color of the line.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 560, 300);
     const lines = { 3:656, 4:486, 5:434, 6:410 }; // nm
@@ -1088,7 +1087,7 @@ scenes.push({
   seeLabel: 'Flame test bench',
   heading: 'Step 6: Flame Tests',
   notes: "Same physics as the emission spectrum, now across many elements: when heated, each element's electrons emit photons of its own <strong>signature color</strong>. That color is what identifies an <strong>unknown</strong> ion in the lab.",
-  notebook: "Test 3 elements. Write each element and its flame color, and one sentence on why <strong>copper</strong> and <strong>sodium</strong> look different. Then look back at your lab: <strong>match your unknown's color to a bench element above, name your unknown</strong>, and say in one sentence why that electron fall makes that color.",
+  notebook: "<strong>Experience:</strong> test 3 elements at the bench, then find the one whose color matches the <strong>unknown</strong> from your lab.<br><strong>Record:</strong> write each element and its flame color, then <strong>name your unknown</strong>.<br><strong>Confirm:</strong> check against your notes, then add one sentence on why <strong>copper</strong> and <strong>sodium</strong> look different.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 360);
     const flames = {
@@ -1097,8 +1096,7 @@ scenes.push({
       K:  {col:'#a855f7', name:'lilac', lines:[404,766]},
       Ca: {col:'#f97316', name:'orange-red', lines:[622,553]},
       Cu: {col:'#10b981', name:'blue-green', lines:[510,525]},
-      Sr: {col:'#ef4444', name:'scarlet red', lines:[650,605]},
-      Ba: {col:'#84cc16', name:'apple green', lines:[524,514]}
+      Sr: {col:'#ef4444', name:'scarlet red', lines:[650,605]}
     };
     let active = 'Na';
     const readout = el('div', { class:'status-line' });
@@ -1159,7 +1157,7 @@ scenes.push({
   seeLabel: 'Isotope explorer',
   heading: 'Step 7: Isotopes',
   notes: "<strong>Isotopes</strong> are atoms of the same element with the same number of <strong>protons</strong> but different numbers of <strong>neutrons</strong>. Carbon-12, carbon-13, and carbon-14 all have 6 protons, so all three are carbon. Only the neutron count changes, so only the <strong>mass number</strong> changes: 12, 13, 14.",
-  notebook: "Before you click, <strong>predict</strong>: which particle count changes from C-12 to C-14, and does the atom stop being carbon? Click all three isotopes and check. Then <strong>draw</strong> the three nuclei side by side, label the protons and neutrons in each, and <strong>write</strong> each mass number.",
+  notebook: "<strong>Experience:</strong> click all three isotopes of carbon and watch what changes in the nucleus.<br><strong>Record:</strong> draw the three nuclei side by side, label the protons and neutrons in each, and write each mass number.<br><strong>Confirm:</strong> check against your notes, then add one sentence: which particle count changed, and why is it still carbon?",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 260);
     let neutrons = 6;   // C: 6 (C-12) or 7 (C-13) or 8 (C-14)
@@ -1190,7 +1188,7 @@ scenes.push({
   seeLabel: 'Ion explorer',
   heading: 'Step 8: Ions',
   notes: "<strong>Ions</strong> form when an atom gains or loses <strong>electrons</strong> to reach a <strong>full outer shell</strong>. Sodium (2, 8, 1) loses its 1 valence electron and becomes a <strong>cation</strong>, Na<sup style=\"font-size:0.68em\">+</sup>, positive. Chlorine (2, 8, 7) gains 1 electron and becomes an <strong>anion</strong>, Cl<sup style=\"font-size:0.68em\">−</sup>, negative.",
-  notebook: "Before you click, <strong>predict</strong>: why would sodium give up exactly 1 electron? (Look at its shells: 2, 8, 1.) Make <strong>Na<sup style=\"font-size:0.68em\">+</sup></strong> and <strong>Cl<sup style=\"font-size:0.68em\">−</sup></strong>, count the electrons in each, and <strong>record</strong> what was lost or gained and the charge left behind.",
+  notebook: "<strong>Experience:</strong> make <strong>Na<sup style=\"font-size:0.68em\">+</sup></strong> and <strong>Cl<sup style=\"font-size:0.68em\">−</sup></strong>, counting the electrons in each.<br><strong>Record:</strong> write what each atom lost or gained and the charge left behind.<br><strong>Confirm:</strong> using your shell notes (sodium is 2, 8, 1), add one sentence on why sodium gives up exactly 1 electron.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 312);
     const states = [
@@ -1235,7 +1233,7 @@ scenes.push({
   seeLabel: 'Particle counter',
   heading: 'Step 8: Protons, Neutrons, Electrons',
   notes: "<strong>Protons</strong> come from the atomic number. <strong>Neutrons</strong> = mass number minus protons. For an ion, <strong>electrons</strong> = protons minus the charge: lose electrons for a +, gain electrons for a −.",
-  notebook: "Fill the table. For chlorine-35 with a <strong>−1</strong> charge, show your work: <strong>17 protons, 18 neutrons, 18 electrons</strong>. Then check yourself.",
+  notebook: "<strong>Experience:</strong> fill the table and check yourself.<br><strong>Record:</strong> for chlorine-35 with a <strong>−1</strong> charge, show your work: <strong>17 protons, 18 neutrons, 18 electrons</strong>.<br><strong>Confirm:</strong> add one sentence on how the charge told you the electron count.",
   build(stage) {
     const rows = [
       { sym:'Cl', z:17, mass:35, charge:-1 },
@@ -1273,7 +1271,7 @@ scenes.push({
   seeLabel: 'Aᵣ calculator',
   heading: 'Step 9: Relative Atomic Mass',
   notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, then add the results. (If you keep the abundances as percents, divide the sum by 100 instead.)",
-  notebook: "Before you calculate, <strong>predict</strong>: copper is ~69% mass-63 and ~31% mass-65, so will its average mass sit closer to 63 or to 65? Run it and check, then copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.",
+  notebook: "<strong>Experience:</strong> run the copper calculation (~69% mass-63, ~31% mass-65).<br><strong>Record:</strong> copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.<br><strong>Confirm:</strong> check against your notes on weighted averages, then add one sentence: why does the average sit closer to 63?",
   build(stage) {
     const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any'}); return el('div',{class:'field'},[el('label',{},lab),i]); };
     const m1=mk('Isotope 1 mass',63), a1=mk('Abundance 1 (%)',69.2), m2=mk('Isotope 2 mass',65), a2=mk('Abundance 2 (%)',30.8);
@@ -1306,7 +1304,7 @@ scenes.push({
   seeLabel: 'Lithium walkthrough',
   heading: 'Step 10: Find an Unknown Abundance',
   notes: "When abundances are unknown, let one isotope be <strong>x</strong> and the other be <strong>1 − x</strong>. Plug both into the Aᵣ equation and solve for x. Then x and 1 − x are your two abundances.",
-  notebook: "Follow the lithium walkthrough. Copy every line. Box the final answer: about <strong>5.9% Li-6 and 94.1% Li-7</strong>.",
+  notebook: "<strong>Experience:</strong> follow the lithium walkthrough step by step.<br><strong>Record:</strong> copy every line and box the final answer: about <strong>5.9% Li-6 and 94.1% Li-7</strong>.<br><strong>Confirm:</strong> add one sentence on why the two percentages must add to 100%.",
   build(stage) {
     const stepsData = [
       { t:'The problem', c:'Lithium has two isotopes, Li-6 (mass 6) and Li-7 (mass 7). Its periodic-table mass is Aᵣ = 6.941. Find the abundance of each.' },
