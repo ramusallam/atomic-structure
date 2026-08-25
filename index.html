@@ -150,7 +150,7 @@
     margin-bottom: 12px;
   }
   .stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-  canvas { display: block; width: 100%; height: auto; border-radius: 12px; }
+  canvas { display: block; width: 100%; height: auto; max-height: 340px; object-fit: contain; border-radius: 12px; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ---- side (what students WRITE) ---- */
@@ -402,6 +402,14 @@
     header, main { padding-left: 16px; padding-right: 16px; }
     .progress-track { padding: 0 16px; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -497,6 +505,9 @@ function el(tag, attrs={}, kids=[]) {
 function makeCanvas(stage, w, h) {
   const c = el('canvas');
   c.width = w; c.height = h;
+  c.setAttribute('role', 'img');
+  c.setAttribute('aria-label', (stageLabel && stageLabel.textContent) || 'Interactive chemistry visualization');
+  c.textContent = 'Interactive chemistry visualization. Use the labeled controls below the image.';
   c.style.maxWidth = (w) + 'px';
   c.style.margin = '0 auto';
   stage.append(c);
@@ -541,11 +552,12 @@ const ICON = {
 // =====================================================
 let currentTick = null;
 let lastTs = null;
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function loop(ts) {
   if (lastTs == null) lastTs = ts;
   const dt = Math.min(50, ts - lastTs);
   lastTs = ts;
-  if (currentTick) currentTick(dt);
+  if (currentTick) currentTick(REDUCED_MOTION ? 1000 : dt);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
@@ -586,6 +598,7 @@ class ElectronCloud {
     }
   }
   update(dt) {
+    if (REDUCED_MOTION) return;
     const f = dt * 0.06;
     for (let i = 0; i < this.shells.length; i++) {
       const dir = (i % 2) ? -1 : 1;
@@ -794,9 +807,9 @@ scenes.push({
     const nCell = el('div', { class: 'pne-cell' }, [el('div',{class:'big readout',style:'color:var(--neutron)'}), el('div',{class:'lab'},'Neutrons')]);
     const mCell = el('div', { class: 'pne-cell' }, [el('div',{class:'big readout',style:'color:var(--textWarm)'}), el('div',{class:'lab'},'Mass number')]);
     grid.append(pCell, nCell, mCell);
-    const slider = el('input', { type:'range', min:1, max:20, value:z });
-    const minus = el('button', { class:'stepper-btn' }, '−');
-    const plus = el('button', { class:'stepper-btn' }, '+');
+    const slider = el('input', { type:'range', min:1, max:20, value:z, 'aria-label':'Atomic number' });
+    const minus = el('button', { class:'stepper-btn', 'aria-label':'Previous atomic number' }, '−');
+    const plus = el('button', { class:'stepper-btn', 'aria-label':'Next atomic number' }, '+');
     const sliderRow = el('div', { class:'slider-row' }, [minus, slider, plus]);
     // steppers walk only the atomic numbers that exist in ELEMENTS, so a lab-metal
     // jump (Cu 29, Sr 38, Ba 56) can never step onto a missing element and freeze
@@ -841,15 +854,17 @@ scenes.push({
     const caps = [2,8,8,2];
     const CX = 260, CY = 192;
     const { c, ctx } = makeCanvas(stage, 520, 384);
+    c.setAttribute('aria-label', 'Bohr model electron-shell builder. Use Add next electron to build the selected atom.');
     const cloud = new ElectronCloud(CX, CY);
-    const status = el('div', { class:'status-line' });
-    const valEl = el('div', { class:'status-line', style:'font-weight:700;color:var(--accentPurple);min-height:18px' });
+    const status = el('div', { class:'status-line', role:'status', 'aria-live':'polite' });
+    const valEl = el('div', { class:'status-line', role:'status', 'aria-live':'polite', style:'font-weight:700;color:var(--accentPurple);min-height:18px' });
     const chips = el('div', { class:'tool-row' }, atoms.map(a => el('button', {
       type:'button', class: 'chip' + (a===z?' active':''), 'data-z':a,
       onclick(){ z=a; placed=[0,0,0,0]; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', +ch.dataset.z===z)); render(); }
     }, ELEMENTS[a].s)));
     const reset = el('button', { type:'button' }, 'Reset electrons');
     reset.addEventListener('click', () => { placed=[0,0,0,0]; render(); });
+    const addElectron = el('button', { type:'button', class:'primary' }, 'Add next electron');
     const target = () => shellsFor(z);
     const totalPlaced = () => placed.reduce((a,b)=>a+b,0);
     const outerOcc = () => placed.reduce((m,v,i)=> v>0 ? i : m, -1);
@@ -867,6 +882,12 @@ scenes.push({
     const nShells = () => shellsFor(z).length;
     // shells fill inside-out: the next shell to fill is the first one not yet at capacity
     const fillShell = () => { for (let i=0;i<nShells();i++){ if ((placed[i]||0) < caps[i]) return i; } return -1; };
+    addElectron.addEventListener('click', () => {
+      const shell = fillShell();
+      if (shell < 0 || totalPlaced() >= z) return;
+      placed[shell] = (placed[shell] || 0) + 1;
+      render();
+    });
     c.addEventListener('click', (ev) => {
       const p = canvasPos(c, ev);
       const d = Math.hypot(p.x - CX, p.y - CY);
@@ -912,7 +933,9 @@ scenes.push({
         ctx.fillText('valence shell', lx, CY);
       }
     };
-    stage.append(chips, status, valEl, reset, el('div',{class:'caption'},'Inner shells fill first; the purple outer shell holds the valence electrons.'));
+    stage.append(chips, status, valEl,
+      el('div',{class:'tool-row'},[addElectron, reset]),
+      el('div',{class:'caption'},'Inner shells fill first; the purple outer shell holds the valence electrons.'));
     render();
   }
 });
@@ -1383,7 +1406,7 @@ scenes.push({
   seeLabel: 'Your questions',
   heading: 'Step 12: What Are You Wondering?',
   notes: "You have seen how protons and neutrons sit in the nucleus, how electrons fill shells, and how jumping electrons make the colors from the flame test. Now turn it around. <strong>What are you still wondering?</strong> Your questions launch our next lesson.",
-  notebook: "Write <strong>at least 5 questions</strong> you still have in your notebook. Then type them here with your <strong>name and class</strong> and hit <strong>Submit</strong>. Watch the class's questions and the word cloud build below.",
+  notebook: "Write <strong>at least 5 questions</strong> in your notebook. You can also save them in this browser below. This version is <strong>device-only</strong>, so share the notebook questions with your teacher.",
   build(stage) {
     const APP = 'Atomic Structure';
     const TEACHER_CODE = 'sparky2026'; // change to your own passcode; open the app with ?teacher=1 to reveal the Clear button
@@ -1405,6 +1428,8 @@ scenes.push({
     const cloud = el('div',{style:'flex:1 1 240px;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:var(--bgMain);padding:10px;text-align:center;align-content:center'});
     stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'What the class is wondering'));
     stage.append(el('div',{style:'display:flex;flex-wrap:wrap;gap:12px;margin-top:6px'},[feed, cloud]));
+    const storageNote = el('div', { class:'caption', role:'status', style:'margin-top:6px' }, 'Saved on this device only. These questions are not shared with the class.');
+    stage.append(storageNote);
 
     // teacher-only clear: remembered per-device. Open once with ?teacher=1 to flag this computer
     // (?teacher=0 un-flags it). After that the button appears automatically here; passcode still required.
@@ -1450,7 +1475,15 @@ scenes.push({
         words.forEach(([w,n],i)=> cloud.append(el('span',{style:`display:inline-block;margin:3px 7px;font-family:var(--font-sans);font-weight:700;line-height:1.05;font-size:${13+Math.round((n/max)*22)}px;color:${pal[i%pal.length]};opacity:${(0.55+0.45*(n/max)).toFixed(2)}`}, w))); }
     }
     paint([]);
-    function wireLive(){ if(window._qUnsub){ try{window._qUnsub();}catch(e){} window._qUnsub=null; } if(window.ClassQ){ window._qUnsub = window.ClassQ.subscribe(APP, paint); } }
+    function wireLive(){
+      if(window._qUnsub){ try{window._qUnsub();}catch(e){} window._qUnsub=null; }
+      if(window.ClassQ){
+        storageNote.textContent = window.ClassQ.mode === 'live'
+          ? 'Shared with this class.'
+          : 'Saved on this device only. These questions are not shared with the class.';
+        window._qUnsub = window.ClassQ.subscribe(APP, paint);
+      }
+    }
     if(window.ClassQ) wireLive(); else window.addEventListener('classq-ready', wireLive, {once:true});
 
     const BAD=/\b(fuck|shit|bitch|damn|crap|ass|dick|piss)\b/i;
@@ -1522,13 +1555,13 @@ function setScene(i) {
   nextBtn.disabled = i === scenes.length-1;
   nextBtn.innerHTML = i === scenes.length-1 ? 'Done' : 'Next ' + ICON.right;
   s.build(stageEl);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
 }
 prevBtn.addEventListener('click', () => { if (current>0) setScene(current-1); });
 nextBtn.addEventListener('click', () => { if (current<scenes.length-1) setScene(current+1); });
 resetBtn.addEventListener('click', () => setScene(0));
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
+  if (e.target.closest('input, textarea, select, button, [contenteditable="true"]')) return;
   if (e.key === 'ArrowRight' && current<scenes.length-1) setScene(current+1);
   if (e.key === 'ArrowLeft' && current>0) setScene(current-1);
 });
