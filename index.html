@@ -1394,7 +1394,7 @@ scenes.push({
         done++; bar.querySelector('.pb-fill').style.width=(done/qs.length*100)+'%';
         text.textContent = done===qs.length?`All ${qs.length} checked`:`${done} of ${qs.length} checked`;
         text.classList.toggle('complete', done===qs.length); });
-      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-head'},[el('span',{class:'q-num'},(i+1)+'.'), pill]), el('div',{class:'q-text'}, item.q), btn, rev ]));
+      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-head'},[el('span',{class:'q-num'},(i+1)+'.'), pill]), el('div',{class:'q-text',html:item.q}), btn, rev ]));
     });
     stage.append(el('div',{class:'pb-progress'},[bar,text]));
   }
