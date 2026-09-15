@@ -1,0 +1,24 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);scripts.forEach(s=>new vm.Script(s));
+const controls={};const control=()=>({checked:false,disabled:false,textContent:'',addEventListener(n,f){this[n]=f;}});
+const source=html.slice(html.indexOf('let current = 0;'),html.indexOf('const pad2 ='));
+vm.runInNewContext(source+`
+requireTask('a','First model');requireTask('b','Second model');assert.equal(canAdvance(),false);
+gateFor().notebook=true;finishTask('a');assert.equal(nextBtn.disabled,true);
+finishTask('b');assert.equal(canAdvance(),true);assert.equal(nextBtn.disabled,false);
+setTask('b',false);assert.equal(canAdvance(),false);finishTask('b');
+notebookDone.checked=false;notebookDone.change();assert.equal(canAdvance(),false);
+notebookDone.checked=true;notebookDone.change();assert.equal(canAdvance(),true);
+requiredTasks=new Map();requireTask('a','First model');requireTask('b','Second model');assert.equal(canAdvance(),true);
+current=1;requiredTasks=new Map();requireTask('a','New model');finishTask('a',0);assert.equal(canAdvance(),false);
+assert.equal(practiceMatches('2, 8, 1',{answer:'2,8,1'}),true);
+assert.equal(practiceMatches('₂ ₈ ₁',{answer:'2,8,1'}),true);
+assert.equal(practiceMatches('35.50',{answer:'35.5'}),true);
+assert.equal(practiceMatches('20%, 80%',{answer:'20,80'}),true);
+assert.equal(practiceMatches('',{answer:'35'}),false);
+assert.equal(practiceMatches('35 cats',{answer:'35'}),false);
+assert.equal(practiceMatches('8,10,8',{answer:'8,8,10'}),false);
+assert.equal(practiceMatches('wrong',{choices:['correct','wrong'],answer:'correct'}),false);
+`,{$:id=>controls[id] ||= control(),WORK:{},scenes:Array(13),nextBtn:control(),persistWork(){},assert});
+console.log('PASS: script parsing, all-task gates, notebook self-confirmation, relocking, step isolation, and equivalent input checks.');

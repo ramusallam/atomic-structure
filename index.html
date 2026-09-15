@@ -411,6 +411,18 @@
     }
   }
 </style>
+<style>
+  header{max-width:none;background:linear-gradient(150deg,#4f46e5,#6366f1);padding:20px max(24px,calc((100vw - 1276px)/2));position:relative;overflow:hidden}
+  header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.09) 1px,transparent 2px);background-size:24px 24px;pointer-events:none}
+  header .titles{position:relative}header .titles .eyebrow{color:#e0e7ff}header .titles h1{color:white;font-size:clamp(24px,3vw,32px);letter-spacing:-.032em}
+  .progress-track{padding-top:14px}.stage-body{justify-content:flex-start}.notes-card{font-size:16px}.step-heading{display:none}.notes-card p{margin:4px 0}.stage-label{margin-bottom:8px}
+  button{min-height:44px}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #4f46e5;outline-offset:3px}
+  button.primary:disabled{background:#e8e0d2;color:#57534e;box-shadow:none;cursor:not-allowed;opacity:1}
+  .gate-status{font-size:14px;color:var(--textSecondary);line-height:1.45;margin:0}.notebook-confirm{display:flex;align-items:center;gap:10px;font-size:14px;line-height:1.4;min-height:44px}.notebook-confirm input{width:20px;height:20px;flex:none;accent-color:var(--accentBlue)}
+  .practice-answer{width:100%;min-height:44px;padding:10px;border:1px solid var(--borderColor);border-radius:10px;font:16px var(--font-sans)}.practice-actions{display:flex;flex-wrap:wrap;gap:8px}.practice-status{min-height:24px;font-size:16px;line-height:1.45}
+  .counter input{min-width:0;width:100%;min-height:44px;font-size:16px}.counter{width:100%;table-layout:fixed}.counter th{font-size:12px}.calc-grid{max-height:250px;overflow:auto}
+  @media(max-width:850px){.workspace{grid-template-columns:minmax(0,1fr);gap:16px}.side{position:static}.stage{min-height:0}.progress-track{padding-inline:16px}main{padding-inline:16px}.stage-body{min-width:0}.step-line .ttl{white-space:normal}canvas{max-height:290px}}
+</style>
 </head>
 <body>
 <header>
@@ -451,6 +463,8 @@
           <button id="nextBtn" class="primary">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
         </div>
       </nav>
+      <label class="notebook-confirm"><input id="notebookDone" type="checkbox">I completed the COPY and DO work in my notebook.</label>
+      <p class="gate-status" id="gateStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
 </main>
@@ -681,7 +695,7 @@ scenes.push({
   step: 'Step 1: From the Flame Test Lab',
   seeLabel: 'From flame test to atom',
   heading: 'Step 1: What Happened in the Lab',
-  notes: "You just ran the <strong>flame test lab</strong>, where every metal ion burned its own color. Here is why. An atom is a tiny <strong>nucleus</strong> of <strong>protons and neutrons</strong> circled by moving <strong>electrons</strong>. The flame's <strong>heat</strong> bumps an outer electron up, then it <strong>falls back</strong> and releases that energy as light, a <strong>photon</strong>. How far it falls sets the color, so each element emits its own <strong>signature color</strong>.",
+  notes: "An atom has a <strong>nucleus</strong> of protons and neutrons surrounded by electrons. Heat excites electrons to higher energy levels. When they fall back, they emit <strong>photons</strong>. Each element's allowed energy differences produce its characteristic light, including the colors from your flame test.",
   notebook: "<strong>Experience:</strong> pick one of the ions you tested in the lab and press <strong>Heat the flame</strong>. Watch one outer electron absorb the heat, jump up a level, then fall back down and release light. Try a second ion.<br><strong>Record:</strong> write each ion and the color it made.<br><strong>Confirm:</strong> check what you saw against your notes, then add one sentence explaining why each metal ion makes a different color.",
   build(stage) {
     const ions = {
@@ -694,6 +708,9 @@ scenes.push({
     };
     let active = 'Na';
     const CX = 190, CY = 156, FLX = 452, FLY = 286;
+    const bridgeState=sceneState('bridge',{seen:[]});
+    requireTask('two-ions','Heat two different lab ions');
+    setTask('two-ions',bridgeState.seen.length>=2);
     const { c, ctx } = makeCanvas(stage, 520, 312);
     const ease = x => x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2;
     const cloud = new ElectronCloud(CX, CY, 6);
@@ -780,6 +797,7 @@ scenes.push({
         for(let k=0;k<11;k++){ const wob=Math.sin(k*0.9+time/70)*5; const xx=px-Math.cos(ang)*k*6+Math.cos(ang+Math.PI/2)*wob, yy=py-Math.sin(ang)*k*6+Math.sin(ang+Math.PI/2)*wob; k===0?ctx.moveTo(xx,yy):ctx.lineTo(xx,yy); }
         ctx.stroke(); ctx.restore();
         if(photon.t>=1){ photon=null;
+          if(!bridgeState.seen.includes(active))bridgeState.seen.push(active);setTask('two-ions',bridgeState.seen.length>=2);
           status.innerHTML = `Light out: the flame glows <strong style="color:${f.col}">${f.name}</strong>, ${ELEMENTS[f.z].n}'s signature color.`; }
       }
       if(burn>0) burn=Math.max(0,burn-dt/1300);
@@ -800,6 +818,8 @@ scenes.push({
   notebook: "<strong>Experience:</strong> drag from atomic number 6 to 7 and watch which number changes to make a new element. Then visit <strong>3 atomic numbers</strong> (try your lab metals).<br><strong>Record:</strong> write each element's name and nuclear symbol, and circle the protons.<br><strong>Confirm:</strong> check your symbols against your notes, then add one sentence: which particle count decides an element's identity?",
   build(stage) {
     let z = 6;
+    const identityState=sceneState('identity',{seen:[6]});
+    requireTask('identity','Visit three atomic numbers, including 6 and 7');
     const symWrap = el('div', { class: 'nuclear-symbol' });
     const name = el('div', { class: 'el-name' });
     const grid = el('div', { class: 'pne-grid' });
@@ -816,6 +836,8 @@ scenes.push({
     const KEYS = Object.keys(ELEMENTS).map(Number).sort((a,b)=>a-b);
     function render() {
       const e = ELEMENTS[z]; const mass = massNum(z); const neut = mass - z;
+      if(!identityState.seen.includes(z))identityState.seen.push(z);
+      setTask('identity',identityState.seen.length>=3 && identityState.seen.includes(6) && identityState.seen.includes(7));
       symWrap.innerHTML = `<span class="ns-stack"><span class="ns-mass">${mass}</span><span class="ns-num">${z}</span></span><span class="ns-sym">${e.s}</span>`;
       name.textContent = e.n;
       pCell.querySelector('.big').textContent = z;
@@ -851,6 +873,8 @@ scenes.push({
     const atoms = [3,6,8,11,12,17,19,20];
     let z = 3;
     let placed = [0,0,0,0];
+    const modelState=sceneState('models',{z:3,placed:[0,0,0,0]});z=modelState.z;placed=modelState.placed.slice();
+    requireTask('model:11','Build sodium (11 electrons)');requireTask('model:20','Build calcium (20 electrons)');
     const caps = [2,8,8,2];
     const CX = 260, CY = 192;
     const { c, ctx } = makeCanvas(stage, 520, 384);
@@ -871,6 +895,8 @@ scenes.push({
     function render() {
       const tg = target();
       const done = totalPlaced() === z && tg.every((v,i)=>v===(placed[i]||0));
+      modelState.z=z;modelState.placed=placed.slice();persistWork();
+      if(done && (z===11 || z===20))finishTask('model:'+z);
       if (totalPlaced() === 0) status.innerHTML = `Click a shell cloud to drop an electron in. ${ELEMENTS[z].s} needs <strong>${z}</strong> electrons.`;
       else if (done) status.innerHTML = `<span class="answer-pill">Correct</span> &nbsp;${ELEMENTS[z].n}: ${tg.join(', ')}`;
       else status.innerHTML = `Placed ${totalPlaced()} of ${z}. Current: ${placed.slice(0, Math.max(1, outerOcc()+1)).join(', ')||'0'}`;
@@ -945,7 +971,7 @@ scenes.push({
   step: 'Step 4: Quantized Energy Levels',
   seeLabel: 'Energy ladder',
   heading: 'Step 4: Energy Comes in Steps',
-  notes: "In the flame test, heat pushed electrons <strong>up</strong> this ladder; now watch them fall. The rungs are <strong>fixed energy levels</strong> with unequal gaps. The <strong>farther</strong> an electron falls, the <strong>more energy</strong> the light carries: its <strong>wavelength gets shorter</strong> and its <strong>frequency gets higher</strong>, sliding the color from <strong>red toward violet (ROYGBIV)</strong>. A small fall gives long-wavelength, low-frequency <strong>red</strong>; a big fall gives short-wavelength, high-frequency <strong>violet</strong>.",
+  notes: "Electrons occupy <strong>fixed energy levels</strong>. A larger energy drop emits a higher-energy photon: <strong>shorter wavelength</strong> and <strong>higher frequency</strong>. Within visible light, that moves the color from red toward violet. This ladder uses illustrative visible wavelengths; real atomic transitions can also emit infrared or ultraviolet light.",
   notebook: "<strong>Experience:</strong> do a <strong>small</strong> fall and a <strong>big</strong> fall with Emit.<br><strong>Record:</strong> for each fall, write the <strong>wavelength</strong>, the <strong>frequency</strong>, and the <strong>color</strong>.<br><strong>Confirm:</strong> check your data against your notes, then finish the rule: as the fall distance increases, wavelength ___, frequency ___, and the color moves toward ___.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 296);
@@ -954,6 +980,7 @@ scenes.push({
     const LY = { 1:262, 2:164, 3:100, 4:60, 5:34 };
     const yOf = n => LY[n];
     let level = 1, anim = null, lastWL = null, prevWL = null, wavePhase = 0;
+    requireTask('small-fall','Complete a small emission');requireTask('big-fall','Complete an emission spanning two or more levels');
     const EX = 150;
     // emission color: bigger drop = more energy = shorter (bluer) wavelength
     const dropWL = (hi, lo) => {
@@ -1002,6 +1029,7 @@ scenes.push({
           if (anim.dir === 'emit') {
             prevWL = lastWL; lastWL = anim.wl;
             const dist = anim.from - anim.to, f = (3000/anim.wl).toFixed(1), col2 = wavelengthToRGB(anim.wl);
+            finishTask(dist===1?'small-fall':'big-fall');
             const wlA = prevWL==null?'':(anim.wl<prevWL?` <span style="color:#166534">${ICON.downSm} shorter</span>`:anim.wl>prevWL?` <span style="color:#9a3412">${ICON.upSm} longer</span>`:' = same');
             const fA  = prevWL==null?'':(anim.wl<prevWL?` <span style="color:#166534">${ICON.upSm} higher</span>`:anim.wl>prevWL?` <span style="color:#9a3412">${ICON.downSm} lower</span>`:' = same');
             status.innerHTML = `Fell <strong>n=${anim.from}→${anim.to}</strong> (${dist} level${dist>1?'s':''}) · λ <strong style="color:${col2}">${anim.wl} nm</strong>${wlA} · f <strong>${f}×10<span style="font-size:0.72em;vertical-align:0.4em">14</span> Hz</strong>${fA} · <strong style="color:${col2}">${colorName(anim.wl)}</strong>`;
@@ -1050,12 +1078,13 @@ scenes.push({
   step: 'Step 5: Emission Spectra (Balmer Series)',
   seeLabel: 'Hydrogen spectrum simulator',
   heading: 'Step 5: Emission Spectra',
-  notes: "When an excited electron falls to energy level <strong>n = 2</strong>, it releases <strong>visible light</strong>. These transitions are the <strong>Balmer series</strong>. A bigger fall releases bluer light; a smaller fall releases redder light.",
+  notes: "In hydrogen, the four transitions shown here (n = 3, 4, 5, 6 to <strong>n = 2</strong>) produce visible lines of the <strong>Balmer series</strong>. A larger energy drop releases shorter-wavelength light. Higher Balmer transitions approach the ultraviolet region.",
   notebook: "<strong>Experience:</strong> click all four jumps (n = 3, 4, 5, 6 → 2) and watch where each line lands.<br><strong>Record:</strong> copy the spectrum and label the reddest and most violet lines.<br><strong>Confirm:</strong> check against your notes, then add one sentence connecting the size of the fall to the color of the line.",
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 560, 300);
     const lines = { 3:656, 4:486, 5:434, 6:410 }; // nm
-    const shown = new Set();
+    const shown = new Set([3,4,5,6].filter(fr=>gateFor().tasks['balmer:'+fr]));
+    [3,4,5,6].forEach(fr=>requireTask('balmer:'+fr,'Observe n='+fr+' to n=2'));
     let drop = null; // {from, t}
     const readout = el('div', { class:'status-line' }, 'Click a transition to drop an electron to n = 2.');
     function fire(from){ if(drop) return; drop = { from, t:0 }; }
@@ -1079,7 +1108,7 @@ scenes.push({
         drop.t = Math.min(1, drop.t + dt/700);
         const y = levelY(drop.from) + (levelY(2)-levelY(drop.from))*drop.t;
         ctx.fillStyle='#6366f1'; ctx.beginPath(); ctx.arc(110,y,7,0,Math.PI*2); ctx.fill();
-        if (drop.t>=1){ shown.add(drop.from); const wl=lines[drop.from];
+        if (drop.t>=1){ shown.add(drop.from);finishTask('balmer:'+drop.from); const wl=lines[drop.from];
           readout.innerHTML = `n=${drop.from} → 2 emits <strong style="color:${wavelengthToRGB(wl)}">${wl} nm</strong> (${colorName(wl)} light).`;
           drop=null; }
       }
@@ -1123,12 +1152,14 @@ scenes.push({
     };
     let active = 'Na';
     const readout = el('div', { class:'status-line' });
+    Object.keys(flames).forEach(k=>requireTask('flame:'+k,'Observe the '+k+' flame'));
     const chips = el('div', { class:'tool-row' }, Object.keys(flames).map(k => el('button', {
       class:'chip'+(k===active?' active':''), 'data-k':k,
       onclick(){ active=k; chips.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active', ch.dataset.k===k)); render(); }
     }, k)));
     function render(){
       const f = flames[active];
+      finishTask('flame:'+active);
       readout.innerHTML = `<strong style="color:${f.col}">${ELEMENTS[Object.keys(ELEMENTS).find(z=>ELEMENTS[z].s===active)].n}</strong> burns <strong>${f.name}</strong>.`;
     }
     currentTick = (dt) => {
@@ -1184,12 +1215,14 @@ scenes.push({
   build(stage) {
     const { c, ctx } = makeCanvas(stage, 520, 260);
     let neutrons = 6;   // C: 6 (C-12) or 7 (C-13) or 8 (C-14)
+    [6,7,8].forEach(n=>requireTask('isotope:'+n,'Compare carbon-'+(6+n)));
     const CX = 260, CY = 130;
     const cloud = new ElectronCloud(CX, CY);
     const isoBtns = el('div',{class:'tool-row'}, [6,7,8].map(nv => el('button',{type:'button',class:'chip'+(nv===neutrons?' active':''),'data-n':nv,
       onclick(){ neutrons=nv; isoBtns.querySelectorAll('.chip').forEach(ch=>ch.classList.toggle('active',+ch.dataset.n===nv)); render(); }}, `C-${6+nv}`)));
     const readout = el('div',{class:'status-line'});
     function render(){
+      finishTask('isotope:'+neutrons);
       readout.innerHTML = `<strong style="color:var(--accentBlue)">Carbon-${6+neutrons}</strong>: 6 protons, ${neutrons} neutrons, mass number ${6+neutrons}. Still carbon.`;
     }
     currentTick = (dt) => {
@@ -1222,6 +1255,7 @@ scenes.push({
     ];
     let active = 'Na';
     const CX = 260, CY = 156;
+    ['Na+','Cl-'].forEach(k=>requireTask('ion:'+k,'Make the '+k+' ion'));
     const cloud = new ElectronCloud(CX, CY);
     const chips = el('div',{class:'tool-row'}, states.map(st => el('button',{type:'button',class:'chip'+(st.k===active?' active':''),'data-k':st.k,
       html: st.html || st.label,
@@ -1230,6 +1264,7 @@ scenes.push({
     const cur = () => states.find(st => st.k===active);
     function render(){
       const st = cur(), e = ELEMENTS[st.z], electrons = st.z - st.chg, sh = shellsFor(electrons).join(', ');
+      if(st.chg)finishTask('ion:'+st.k);
       const sym = st.chg===0 ? '' : `<sup style="font-size:0.68em;font-weight:700;color:${st.chg>0?'var(--cation)':'var(--anion)'}">${st.chg>0?'+':'−'}</sup>`;
       const desc = st.chg===0 ? `neutral atom, ${st.z} protons, ${electrons} electrons (${sh})`
         : st.chg>0 ? `<strong style="color:var(--cation)">cation</strong>, lost 1 electron: ${st.z} protons, ${electrons} electrons (${sh}), full outer shell`
@@ -1275,8 +1310,10 @@ scenes.push({
     tbl.append(el('tr',{},[el('th',{},'Ion'),el('th',{},'Protons'),el('th',{},'Neutrons'),el('th',{},'Electrons')]));
     rows.forEach(r => {
       const ans = { p:r.z, n:r.mass-r.z, e:r.z - r.charge };
-      const mk = key => { const i = el('input',{type:'number',inputmode:'numeric'});
-        i.addEventListener('input',()=>{ const v=i.value.trim(); if(v==='') {i.classList.remove('ok','no');return;} i.classList.toggle('ok',+v===ans[key]); i.classList.toggle('no',+v!==ans[key]); });
+      const mk = key => { const id='particle:'+r.sym+':'+key;requireTask(id,'Enter '+({p:'protons',n:'neutrons',e:'electrons'}[key])+' for '+r.sym);
+        const i = el('input',{type:'number',inputmode:'numeric','aria-label':ionText(r)+' '+({p:'protons',n:'neutrons',e:'electrons'}[key])});
+        setTask(id,false);
+        i.addEventListener('input',()=>{ const v=i.value.trim();setTask(id,v!=='' && +v===ans[key]);if(v==='') {i.classList.remove('ok','no');return;} i.classList.toggle('ok',+v===ans[key]); i.classList.toggle('no',+v!==ans[key]); });
         return i; };
       tbl.append(el('tr',{},[el('td',{class:'sym',html:ionHTML(r)}), el('td',{},mk('p')), el('td',{},mk('n')), el('td',{},mk('e'))]));
     });
@@ -1284,7 +1321,7 @@ scenes.push({
     const rev = el('div',{class:'reveal-content',hidden:''});
     rev.innerHTML = rows.map(r => `<div><strong>${ionText(r)}</strong>: ${r.z} protons, ${r.mass-r.z} neutrons, ${r.z-r.charge} electrons</div>`).join('');
     revBtn.addEventListener('click',()=>{ const h=rev.hasAttribute('hidden'); if(h){rev.removeAttribute('hidden');revBtn.textContent=revBtn.dataset.hide;} else {rev.setAttribute('hidden','');revBtn.textContent=revBtn.dataset.show;} });
-    stage.append(tbl, el('div',{style:'margin-top:12px;text-align:center'},[revBtn]), rev, el('div',{class:'caption',style:'margin-top:8px'},'Green means your number matches.'));
+    stage.append(tbl, el('div',{style:'margin-top:12px;text-align:center'},[revBtn]), rev, el('div',{class:'caption',style:'margin-top:8px'},'Complete all fifteen particle counts to continue.'));
   }
 });
 
@@ -1296,11 +1333,13 @@ scenes.push({
   notes: "The <strong>relative atomic mass (Aᵣ)</strong> is the <strong>weighted average</strong> of every natural isotope. Multiply each isotope's mass by its abundance as a decimal, then add the results. (If you keep the abundances as percents, divide the sum by 100 instead.)",
   notebook: "<strong>Experience:</strong> run the copper calculation (~69% mass-63, ~31% mass-65).<br><strong>Record:</strong> copy the full line: <strong>(63 × 0.692) + (65 × 0.308) = 63.62</strong>.<br><strong>Confirm:</strong> check against your notes on weighted averages, then add one sentence: why does the average sit closer to 63?",
   build(stage) {
-    const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any'}); return el('div',{class:'field'},[el('label',{},lab),i]); };
+    requireTask('ar','Calculate the copper weighted average');
+    const mk = (lab,val) => { const i=el('input',{type:'number',value:val,step:'any','aria-label':lab}); return el('div',{class:'field'},[el('label',{},lab),i]); };
     const m1=mk('Isotope 1 mass',63), a1=mk('Abundance 1 (%)',69.2), m2=mk('Isotope 2 mass',65), a2=mk('Abundance 2 (%)',30.8);
     const steps = el('div',{class:'calc-steps'});
     const calc = () => {
       const M1=+m1.querySelector('input').value, A1=+a1.querySelector('input').value, M2=+m2.querySelector('input').value, A2=+a2.querySelector('input').value;
+      if([m1,a1,m2,a2].some(f=>f.querySelector('input').value.trim()==='') || ![M1,A1,M2,A2].every(Number.isFinite) || M1<=0 || M2<=0 || A1<0 || A2<0 || Math.abs(A1+A2-100)>0.001){steps.textContent='Enter positive isotope masses and abundances totaling 100%.';setTask('ar',false);return;}
       const d1=A1/100, d2=A2/100, t1=M1*d1, t2=M2*d2, ar=t1+t2, tot=A1+A2;
       steps.innerHTML =
         `<div class="muted">Aᵣ = (mass × decimal abundance) summed</div>` +
@@ -1309,8 +1348,8 @@ scenes.push({
         `<div class="res">Aᵣ = ${ar.toFixed(2)}</div>` +
         (Math.abs(tot-100)>0.5 ? `<div class="muted">note: abundances add to ${tot}%, should total 100%</div>` : '');
     };
-    [m1,a1,m2,a2].forEach(f=>f.querySelector('input').addEventListener('input',calc));
-    const btn = el('button',{class:'primary',onclick:calc},'Calculate Aᵣ');
+    [m1,a1,m2,a2].forEach(f=>f.querySelector('input').addEventListener('input',()=>{setTask('ar',false);calc();}));
+    const btn = el('button',{class:'primary',onclick(){calc();if(+m1.querySelector('input').value===63 && +m2.querySelector('input').value===65 && +a1.querySelector('input').value===69.2 && +a2.querySelector('input').value===30.8)finishTask('ar');else gateStatus.textContent='Calculate copper with masses 63 and 65, and abundances 69.2% and 30.8%.';}},'Calculate Aᵣ');
     stage.append(
       el('div',{class:'eyebrow-sm'},'Copper: ⁶³Cu and ⁶⁵Cu'),
       el('div',{class:'iso-row'},[m1,a1]),
@@ -1338,6 +1377,8 @@ scenes.push({
       { t:'Answer', c:'x = 0.059 → 5.9% Li-6, and 1 − x = 0.941 → 94.1% Li-7.' }
     ];
     let shown = 0;
+    requireTask('walkthrough','Reveal all six worked calculation lines');
+    const walkState=sceneState('walkthrough',{shown:0});
     const list = el('div',{class:'calc-grid'});
     const status = el('div',{class:'pb-text'});
     const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
@@ -1346,9 +1387,10 @@ scenes.push({
     function addStep(){ if(shown>=stepsData.length) return; const s=stepsData[shown];
       const card = el('div',{class:'q-card'},[ el('div',{class:'q-text'},[el('span',{class:'q-num'},(shown+1)+'.'), s.t]),
         el('div',{class:'reveal-content',style:'border-left-color:var(--accentBlue)'}, s.c) ]);
-      list.append(card); shown++; renderStatus(); nextStepBtn.textContent = shown>=stepsData.length?'All steps shown':'Reveal next step'; nextStepBtn.disabled = shown>=stepsData.length; }
+      list.append(card); shown++;walkState.shown=shown;setTask('walkthrough',shown===stepsData.length); renderStatus(); nextStepBtn.textContent = shown>=stepsData.length?'All steps shown':'Reveal next step'; nextStepBtn.disabled = shown>=stepsData.length; }
     const nextStepBtn = el('button',{class:'primary',onclick:addStep},'Reveal next step');
     stage.append(el('div',{class:'eyebrow-sm'},'Lithium: Aᵣ = 6.941'), nextStepBtn, list, el('div',{class:'pb-progress'},[bar,status]));
+    const savedShown=walkState.shown;for(let i=0;i<savedShown;i++)addStep();
     renderStatus();
   }
 });
@@ -1383,20 +1425,45 @@ scenes.push({
       { d:'Challenge', q:'Worked: solving for percentages. Boron has isotopes B-10 and B-11 and a relative atomic mass of 10.8. Find the percentage of each isotope.',
         a:'Let x = fraction of B-10, so (1 − x) = fraction of B-11.<br>10x + 11(1 − x) = 10.8<br>10x + 11 − 11x = 10.8<br>−x = −0.2 &nbsp;→&nbsp; x = 0.2<br>So <strong>20% B-10 and 80% B-11</strong>.' }
     ];
-    let done = 0;
-    const bar = el('div',{class:'pb-bar'},[el('div',{class:'pb-fill'})]);
-    const text = el('div',{class:'pb-text'}, `0 of ${qs.length} checked`);
-    qs.forEach((item,i) => {
-      const pill = el('span',{class:'diff-pill '+(item.d==='Simple'?'diff-simple':'diff-challenge')}, item.d);
-      const btn = el('button',{class:'reveal-btn'},'Show solution');
-      const rev = el('div',{class:'reveal-content',hidden:'',html:item.a});
-      btn.addEventListener('click',()=>{ if(!rev.hasAttribute('hidden')) return; rev.removeAttribute('hidden'); btn.textContent='Solution shown, copy it down'; btn.disabled=true;
-        done++; bar.querySelector('.pb-fill').style.width=(done/qs.length*100)+'%';
-        text.textContent = done===qs.length?`All ${qs.length} checked`:`${done} of ${qs.length} checked`;
-        text.classList.toggle('complete', done===qs.length); });
-      stage.append(el('div',{class:'q-card'},[ el('div',{class:'q-head'},[el('span',{class:'q-num'},(i+1)+'.'), pill]), el('div',{class:'q-text',html:item.q}), btn, rev ]));
-    });
-    stage.append(el('div',{class:'pb-progress'},[bar,text]));
+    const checks = [
+      {label:'Element and proton count',choices:['Sodium, 11 protons','Magnesium, 12 protons','Sodium, 10 protons'],answer:'Sodium, 11 protons'},
+      {label:'Which emission came from a bigger energy drop?',choices:['Violet: shorter wavelength, more energy','Red: longer wavelength, more energy','Both have the same energy'],answer:'Violet: shorter wavelength, more energy'},
+      {label:'Shell counts, separated by commas',answer:'2,8,1'},
+      {label:'Why are there distinct spectral lines?',choices:['Only specific energy differences are allowed','Electrons can release any energy','The nucleus changes element when heated'],answer:'Only specific energy differences are allowed'},
+      {label:'Mass number',answer:'35'},
+      {label:'Why is carbon-14 heavier?',choices:['Same 6 protons; 8 rather than 6 neutrons','More protons make a different element','Two extra electrons account for the mass'],answer:'Same 6 protons; 8 rather than 6 neutrons'},
+      {label:'Number of electrons',answer:'10'},
+      {label:'Protons, neutrons, electrons (in that order)',answer:'8,8,10'},
+      {label:'Relative atomic mass',answer:'35.5'},
+      {label:'B-10 percentage, B-11 percentage (in that order)',answer:'20,80'}
+    ];
+    const state=sceneState('practice-v1',{position:0,answers:Array.from({length:10},()=>({value:'',checked:false,seen:false}))});
+    checks.forEach((spec,i)=>requireTask('practice:'+i,'Check question '+(i+1)+' and open its solution'));
+    function complete(i){const a=state.answers[i];return a.checked && practiceMatches(a.value,checks[i]) && a.seen;}
+    function refresh(){checks.forEach((_,i)=>setTask('practice:'+i,complete(i)));}
+    const panel=el('div');stage.append(panel);
+    function render(){
+      panel.innerHTML='';const i=state.position,item=qs[i],spec=checks[i],a=state.answers[i];
+      const pill=el('span',{class:'diff-pill '+(item.d==='Simple'?'diff-simple':'diff-challenge')},item.d);
+      const field=spec.choices ? el('select',{id:'practiceAnswer',class:'practice-answer'},[el('option',{value:''},'Choose the key idea'),...spec.choices.map(v=>el('option',{value:v},v))]) : el('input',{id:'practiceAnswer',class:'practice-answer',type:'text',autocomplete:'off',inputmode:'text'});
+      field.value=a.value;
+      const feedback=el('div',{class:'practice-status',role:'status','aria-live':'polite'},a.checked?'Correct. Copy the worked solution into your notebook.':'');
+      const check=el('button',{class:'primary'},'Check answer');
+      const rev=el('div',{class:'reveal-content',hidden:'',html:item.a});
+      const reveal=el('button',{class:'reveal-btn','aria-expanded':'false'},'Show solution');
+      const back=el('button',{},'Previous question');back.disabled=i===0;
+      const next=el('button',{class:'primary'},i===9?'Finish practice':'Next question');
+      function update(){refresh();next.disabled=!complete(i);}
+      field.addEventListener('input',()=>{a.value=field.value;a.checked=false;feedback.textContent='';update();persistWork();});
+      field.addEventListener('change',()=>{a.value=field.value;a.checked=false;feedback.textContent='';update();persistWork();});
+      check.addEventListener('click',()=>{a.value=field.value;a.checked=practiceMatches(a.value,spec);feedback.textContent=a.checked?'Correct. Copy the worked solution into your notebook.':!a.value.trim()?'Enter an answer first.':spec.choices?'Revisit the model, then choose the idea that matches your notebook explanation.':'Check the particle counts, order, or calculation, then try again.';update();persistWork();});
+      reveal.addEventListener('click',()=>{const open=rev.hidden;rev.hidden=!open;reveal.textContent=open?'Hide solution':'Show solution';reveal.setAttribute('aria-expanded',String(open));if(open)a.seen=true;update();persistWork();});
+      back.addEventListener('click',()=>{state.position--;persistWork();render();});
+      next.addEventListener('click',()=>{if(!complete(i))return;if(i<9){state.position++;persistWork();render();}else if(canAdvance())setScene(current+1);else gateStatus.textContent='Confirm your completed notebook work to finish practice.';});
+      const done=checks.filter((_,j)=>complete(j)).length;
+      panel.append(el('div',{class:'q-head'},[el('span',{class:'q-num'},'Question '+(i+1)+' / 10'),pill]),el('div',{class:'q-text',html:item.q}),el('p',{class:'caption'},'Write your full answer and reasoning in your notebook, then check the key result here.'),el('label',{for:'practiceAnswer'},spec.label),field,el('div',{class:'practice-actions',style:'margin-top:12px'},[check,reveal]),feedback,rev,el('p',{class:'pb-text'},done+' of 10 complete'),el('div',{class:'practice-actions'},[back,next]));update();
+    }
+    render();
   }
 });
 
@@ -1419,14 +1486,14 @@ scenes.push({
     for (let i=0;i<5;i++){ const inp = el('input',{type:'text',placeholder:'I wonder...',style:inS+';flex:1;min-width:0'}); inputs.push(inp);
       wrap.append(el('div',{style:'display:flex;align-items:center;gap:10px'},[ el('div',{class:'q-num',style:'min-width:20px'},(i+1)+'.'), inp ])); }
     stage.append(wrap);
-    const btn = el('button',{class:'primary',style:'margin-top:2px'},'Submit my questions');
+    const btn = el('button',{class:'primary',style:'margin-top:2px'},'Save my questions');
     const msg = el('div',{class:'status-line',style:'text-align:left;min-height:0'});
     stage.append(el('div',{style:'display:flex;align-items:center;gap:12px;margin-top:2px'},[btn, msg]));
 
     // live class feed + word cloud (wraps to stacked panels on narrow/embedded viewports)
     const feed = el('div',{style:'flex:1 1 240px;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:#fff'});
     const cloud = el('div',{style:'flex:1 1 240px;min-width:0;max-height:210px;overflow:auto;border:1px solid var(--borderColor);border-radius:10px;background:var(--bgMain);padding:10px;text-align:center;align-content:center'});
-    stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'What the class is wondering'));
+    stage.append(el('div',{class:'eyebrow-sm',style:'margin-top:14px'},'Questions saved on this device'));
     stage.append(el('div',{style:'display:flex;flex-wrap:wrap;gap:12px;margin-top:6px'},[feed, cloud]));
     const storageNote = el('div', { class:'caption', role:'status', style:'margin-top:6px' }, 'Saved on this device only. These questions are not shared with the class.');
     stage.append(storageNote);
@@ -1462,7 +1529,7 @@ scenes.push({
       // feed
       feed.innerHTML='';
       const qlist=[]; (items||[]).forEach(it => (it.questions||[]).forEach(q => { if(q) qlist.push({q, who:(it.name||'Anon'), kl:(it.klass||'')}); }));
-      if(!qlist.length){ feed.innerHTML='<div class="caption" style="padding:16px">Be the first: submit a question.</div>'; }
+      if(!qlist.length){ feed.innerHTML='<div class="caption" style="padding:16px">Your saved questions appear here.</div>'; }
       else qlist.forEach(r => feed.append(el('div',{style:'padding:8px 11px;border-bottom:1px solid var(--borderSubtle)'},[
         el('div',{style:'font-size:13.5px;color:var(--textPrimary);line-height:1.4'}, r.q),
         el('div',{style:'font-family:var(--font-mono);font-size:10px;color:var(--textWarmMuted);margin-top:2px'}, r.who + (r.kl?(' · '+r.kl):'')) ])));
@@ -1470,7 +1537,7 @@ scenes.push({
       const freq={}; (items||[]).forEach(it => (it.questions||[]).forEach(q => (q||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).forEach(w => { if(w.length>2 && !STOP.has(w)) freq[w]=(freq[w]||0)+1; })));
       const words=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,36);
       cloud.innerHTML='';
-      if(!words.length){ cloud.innerHTML='<div class="caption">Common words appear here as the class submits.</div>'; }
+      if(!words.length){ cloud.innerHTML='<div class="caption">Words from your saved questions appear here.</div>'; }
       else { const max=words[0][1], pal=['#6366f1','#a855f7','#7c3aed','#4f46e5','#8b5cf6'];
         words.forEach(([w,n],i)=> cloud.append(el('span',{style:`display:inline-block;margin:3px 7px;font-family:var(--font-sans);font-weight:700;line-height:1.05;font-size:${13+Math.round((n/max)*22)}px;color:${pal[i%pal.length]};opacity:${(0.55+0.45*(n/max)).toFixed(2)}`}, w))); }
     }
@@ -1496,10 +1563,9 @@ scenes.push({
       try {
         if(!window.ClassQ) throw new Error('offline');
         await window.ClassQ.submit({ app:APP, name:name.value.trim(), klass:klass.value.trim(), questions:qs });
-        btn.textContent='Submitted'; msg.textContent = (window.ClassQ.mode==='live') ? 'Thanks! Added below for the class.' : 'Added below (demo mode on this device).'; msg.classList.add('complete');
-        inputs.forEach(i=>i.value='');
+        btn.disabled=false;btn.textContent='Save my questions'; msg.textContent = (window.ClassQ.mode==='live') ? 'Shared with this class.' : 'Saved on this device.'; msg.classList.add('complete');
       } catch(err){
-        btn.disabled=false; btn.textContent='Submit my questions';
+        btn.disabled=false; btn.textContent='Save my questions';
         msg.textContent='Could not submit, try again.'; msg.classList.remove('complete');
       }
     });
@@ -1534,10 +1600,25 @@ const prevBtn = $('#prevBtn');
 const nextBtn = $('#nextBtn');
 const resetBtn = $('#resetBtn');
 let current = 0;
+let requiredTasks = new Map();
+const notebookDone = $('#notebookDone');
+const gateStatus = $('#gateStatus');
+function gateFor(scene=current){return WORK['gate:v1:'+scene] ||= {tasks:{},notebook:false,complete:false};}
+function requireTask(id,label){requiredTasks.set(id,label);updateGate();}
+function setTask(id,done,scene=current){gateFor(scene).tasks[id]=!!done;if(scene===current)updateGate();persistWork();}
+function finishTask(id,scene=current){setTask(id,true,scene);}
+function canAdvance(){const g=gateFor();return g.notebook && [...requiredTasks.keys()].every(id=>g.tasks[id]);}
+function updateGate(){const g=gateFor(),left=[...requiredTasks].filter(([id])=>!g.tasks[id]);g.complete=canAdvance();notebookDone.checked=g.notebook;nextBtn.disabled=current===scenes.length-1 || !g.complete;gateStatus.textContent=left.length ? left.length+' remaining: '+left[0][1]+'.' : !g.notebook ? 'Complete your notebook work, then confirm above (self-confirmed).' : 'Step complete. Your work is saved on this device.';}
+notebookDone.addEventListener('change',()=>{gateFor().notebook=notebookDone.checked;updateGate();persistWork();});
+function sceneState(id,defaults){return WORK['state:'+current+':'+id] ||= defaults;}
+function practiceMatches(value,spec){if(spec.choices)return value===spec.answer;const normalize=s=>String(s).trim().replace(/[\u2080-\u2089]/g,c=>String(c.charCodeAt(0)-0x2080)).replace(/%/g,'').split(/[\s,;]+/).filter(Boolean);const got=normalize(value),want=normalize(spec.answer);return got.length===want.length && got.every((v,i)=>/^\d+(\.\d+)?$/.test(v) && Number(v)===Number(want[i]));}
 const pad2 = n => n < 10 ? '0'+n : ''+n;
 
 function setScene(i) {
+  if(i>current && (i!==current+1 || !canAdvance()))return;
   current = i;
+  requiredTasks=new Map();
+  WORK.current=i;
   currentTick = null;
   if (window._qUnsub) { try { window._qUnsub(); } catch(e){} window._qUnsub = null; }
   const s = scenes[i];
@@ -1548,7 +1629,22 @@ function setScene(i) {
   stepNumEl.textContent = 'Step ' + pad2(i+1);
   stepTitleEl.textContent = shortTitle;
   notesEl.innerHTML = s.notes;
-  notebookTextEl.innerHTML = s.notebook;
+  const notebookPrompts=[
+    'Predict two lab ions\' flame colors, then heat both. Record their colors and explain why the emitted light differs.',
+    'Build sodium and calcium. Draw both shell arrangements, circle the valence electrons, and explain how inner electrons shield the outer ones.',
+    'Predict how a small and a big fall differ. Complete both, record wavelength, frequency, and color, then explain the pattern.',
+    'Predict the reddest hydrogen transition. Run all four jumps, draw the spectrum, and label the red and violet lines.',
+    'Observe all six flames. Record each element and color, compare with your lab notes, and explain any disagreement.',
+    'Change atomic number from 6 to 7, then visit a third element. Draw their nuclear symbols and explain what determines identity.',
+    'Compare carbon-12, carbon-13, and carbon-14. Draw and label each nucleus, then explain what changes and what stays the same.',
+    'Compare sodium with Na+ and chlorine with Cl-. Record electron counts, charges, and why each gains or loses one electron.',
+    'Complete all five ions. Show your particle-count calculations for chlorine-35 with a -1 charge and explain the electron count.',
+    'Calculate copper\'s average. Copy (63 × 0.692) + (65 × 0.308) = 63.62 and explain why the average is closer to 63.',
+    'Reveal all six lithium calculation lines. Copy the working, box 5.9% Li-6 and 94.1% Li-7, and explain why they total 100%.',
+    'Number your page 1 to 10. Write each full answer and explanation first, check its key result, then copy the worked solution.',
+    'Write five questions in your notebook for our next lesson. You may also save them on this device; share your notebook with your teacher.'
+  ];
+  notebookTextEl.textContent = notebookPrompts[i];
   stepIndicator.textContent = `${pad2(i+1)} / ${pad2(scenes.length)}`;
   progressFill.style.width = ((i+1)/scenes.length*100) + '%';
   prevBtn.disabled = i === 0;
@@ -1556,6 +1652,7 @@ function setScene(i) {
   nextBtn.innerHTML = i === scenes.length-1 ? 'Done' : 'Next ' + ICON.right;
   s.build(stageEl);
   restoreWork(i);
+  updateGate();persistWork();
   window.scrollTo({ top: 0, behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
 }
 prevBtn.addEventListener('click', () => { if (current>0) setScene(current-1); });
@@ -1580,6 +1677,7 @@ function persistWork(){ clearTimeout(workTimer); workTimer = setTimeout(() => { 
 function workFields(){ return Array.from(stageEl.querySelectorAll('input, textarea, select')).filter(f => f.type !== 'password' && f.type !== 'file'); }
 function workKey(scene, f, idx){ return scene + ':' + (f.type || f.tagName.toLowerCase()) + ':' + idx; }
 function restoreWork(scene){
+  if(scene===11)return; // Stable practice state is restored by its own renderer.
   workFields().forEach((f, idx) => {
     const k = workKey(scene, f, idx);
     if (!(k in WORK)) return;
@@ -1597,6 +1695,7 @@ function recordWork(e){
   const f = e.target;
   if (!f || !f.matches || !f.matches('input, textarea, select')) return;
   if (f.type === 'password' || f.type === 'file') return;
+  if(current===11)return; // Practice owns stable question-keyed state, not position-keyed inputs.
   const idx = workFields().indexOf(f);
   if (idx < 0) return;
   WORK[workKey(current, f, idx)] = (f.type === 'checkbox' || f.type === 'radio') ? f.checked : f.value;
@@ -1605,7 +1704,10 @@ function recordWork(e){
 stageEl.addEventListener('input', recordWork);
 stageEl.addEventListener('change', recordWork);
 
-setScene(0);
+window.addEventListener('pagehide',()=>{clearTimeout(workTimer);try{localStorage.setItem(WORK_KEY,JSON.stringify(WORK));}catch(e){}});
+const firstUnfinished=scenes.findIndex((_,i)=>!gateFor(i).complete);
+current=Math.min(Number(WORK.current)||0,firstUnfinished<0?scenes.length-1:firstUnfinished);
+setScene(current);
 </script>
 <script type="module">
 /* ===== Class Questions collector =====
