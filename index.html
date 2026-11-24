@@ -4,15 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Atomic Structure</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Roboto+Mono:wght@400;700&family=Roboto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     /* Spark Learning companion tokens */
     --bgMain: #F7F3EE;
     --bgPanel: #FFFFFF;
     --bgCard: #FFFFFF;
-    --accentBlue: #6366f1;
-    --accentBlueHover: #4f46e5;
+    --accentBlue: #4f46e5;
+    --accentEdge: #6366f1;
+    --accentBlueHover: #3730a3;
     --accentPurple: #a855f7;
     --accentGreen: #10b981;
     --accentRed: #ef4444;
@@ -25,11 +26,11 @@
     --borderColor: #E8E0D2;
     --borderSubtle: #F0EBE3;
     --shadow-sm: 0 1px 2px rgba(17,17,17,0.04), 0 1px 3px rgba(17,17,17,0.06);
-    --shadow-md: 0 4px 12px rgba(17,17,17,0.06), 0 2px 4px rgba(17,17,17,0.04);
+    --shadow-md: 0 12px 32px #36285712, 0 2px 4px #36285708;
     --shadow-lg: 0 16px 40px rgba(17,17,17,0.10), 0 4px 12px rgba(17,17,17,0.06);
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-serif: 'Roboto Serif', Georgia, Cambria, serif;
-    --font-mono: 'Roboto Mono', monospace;
+    --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+    --font-serif: 'Fraunces', Georgia, Cambria, serif;
+    --font-mono: 'Geist Mono', ui-monospace, monospace;
     /* preserved student-copy note artifact */
     --note-bg: #fdf1c6;
     --note-ink: #2a1e08;
@@ -131,7 +132,7 @@
   .stage {
     background: var(--bgCard);
     border: 1px solid var(--borderColor);
-    border-top: 4px solid var(--accentBlue);
+    border-top: 4px solid var(--accentEdge);
     border-radius: 16px;
     box-shadow: var(--shadow-md);
     padding: 16px 18px;
@@ -412,9 +413,8 @@
   }
 </style>
 <style>
-  header{max-width:none;background:linear-gradient(150deg,#4f46e5,#6366f1);padding:20px max(24px,calc((100vw - 1276px)/2));position:relative;overflow:hidden}
-  header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.09) 1px,transparent 2px);background-size:24px 24px;pointer-events:none}
-  header .titles{position:relative}header .titles .eyebrow{color:#e0e7ff}header .titles h1{color:white;font-size:clamp(24px,3vw,32px);letter-spacing:-.032em}
+  header{max-width:none;background:radial-gradient(circle at 1px 1px,#ffffff20 1px,transparent 1.5px) 0 0 / 21px 21px,linear-gradient(125deg,var(--accentBlueHover),var(--accentBlue));padding:20px max(24px,calc((100vw - 1276px)/2));position:relative;overflow:hidden}
+  header .titles{position:relative}header .titles .eyebrow{color:#e0e7ff;letter-spacing:.10em}header .titles h1{color:white;font:600 clamp(26px,5.5vw,39px)/1.06 var(--font-serif);letter-spacing:-.025em}
   .progress-track{padding-top:14px}.stage-body{justify-content:flex-start}.notes-card{font-size:16px}.step-heading{display:none}.notes-card p{margin:4px 0}.stage-label{margin-bottom:8px}
   button{min-height:44px}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #4f46e5;outline-offset:3px}
   button.primary:disabled{background:#e8e0d2;color:#57534e;box-shadow:none;cursor:not-allowed;opacity:1}
@@ -423,7 +423,7 @@
   .counter input{min-width:0;width:100%;min-height:44px;font-size:16px}.counter{width:100%;table-layout:fixed}.counter th{font-size:12px}.calc-grid{max-height:250px;overflow:auto}
   @media(max-width:850px){.workspace{grid-template-columns:minmax(0,1fr);gap:16px}.side{position:static}.stage{min-height:0}.progress-track{padding-inline:16px}main{padding-inline:16px}.stage-body{min-width:0}.step-line .ttl{white-space:normal}canvas{max-height:290px}}
 </style>
-<style id="made-by-style">.made-by{text-align:center;font-family:var(--font-mono,"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,monospace);font-size:11px;letter-spacing:.08em;line-height:1.5;color:var(--warm-muted,#7C6F5A);margin:40px auto 24px;padding:0 16px}.made-by a{color:inherit;text-decoration:underline;text-underline-offset:3px}@media print{.made-by{display:none}}</style>
+<style id="made-by-style">.made-by{text-align:center;font-family:var(--font-mono,"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace);font-size:11px;letter-spacing:.08em;line-height:1.5;color:var(--warm-muted,#7C6F5A);margin:40px auto 24px;padding:0 16px}.made-by a{color:inherit;text-decoration:underline;text-underline-offset:3px}@media print{.made-by{display:none}}</style>
 </head>
 <body>
 <header>
